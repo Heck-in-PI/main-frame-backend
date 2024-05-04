@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	api "mf-backend/api"
 	"net/http"
@@ -31,6 +32,7 @@ func server() {
 		return
 	}
 
+	fmt.Println("...")
 	log.Println("Server started listening on port :" + appPort)
 
 	log.Fatal(http.ListenAndServe(":"+appPort, router))

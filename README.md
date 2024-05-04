@@ -8,3 +8,6 @@ Wifi module will be responsible of every thing related to wifi application (unde
 
 #### Interfaces
 Interfaces path will list device wirless interfaces, think of it as iwconfig.
+
+#### ScanAP
+ScanAP path will use a wireless interface to scan for access points

@@ -1,11 +1,15 @@
 package wifi
 
 import (
+	"encoding/json"
+	"io"
+	"log"
 	v1_common "mf-backend/api/v1/v1Common"
 
 	"net/http"
 
-	"github.com/mdlayher/wifi"
+	wifi "github.com/mdlayher/wifi"
+	goWireless "github.com/theojulienne/go-wireless"
 )
 
 // interfaces handler
@@ -62,5 +66,61 @@ func interfacesHandler(resp http.ResponseWriter, req *http.Request) {
 		}
 
 		v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+	}
+}
+
+// scan access point handler
+func scanApHandler(resp http.ResponseWriter, req *http.Request) {
+
+	defer req.Body.Close()
+
+	if req.Method == "POST" {
+
+		var interfaceName InterfaceName
+
+		body, _ := io.ReadAll(req.Body)
+		err := json.Unmarshal(body, &interfaceName)
+		if err != nil {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: err.Error(),
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+			return
+		}
+
+		client, err := goWireless.NewClient(interfaceName.InterfaceName)
+		if err != nil {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: err.Error(),
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+			return
+		}
+
+		log.Println(client)
+		defer client.Close()
+
+		aps, err := client.Scan()
+		if err != nil {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: err.Error(),
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+			return
+		}
+
+		v1_common.JsonResponceHandler(resp, http.StatusOK, aps)
+
+	} else {
+		resp.Write([]byte("{\"err\":\"invalid request\"}"))
 	}
 }

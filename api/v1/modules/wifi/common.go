@@ -1,6 +1,8 @@
 package wifi
 
-import "github.com/mdlayher/wifi"
+import (
+	"github.com/mdlayher/wifi"
+)
 
 type WirelessInterface struct {
 	Index        int
@@ -10,4 +12,8 @@ type WirelessInterface struct {
 	Device       int
 	Type         wifi.InterfaceType
 	Frequency    int
+}
+
+type InterfaceName struct {
+	InterfaceName string
 }
