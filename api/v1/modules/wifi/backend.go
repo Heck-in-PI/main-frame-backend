@@ -5,6 +5,8 @@ import (
 	"io"
 	"log"
 	v1_common "mf-backend/api/v1/v1Common"
+	"net"
+	"strings"
 
 	"net/http"
 
@@ -120,6 +122,80 @@ func scanApHandler(resp http.ResponseWriter, req *http.Request) {
 
 		v1_common.JsonResponceHandler(resp, http.StatusOK, aps)
 
+	} else {
+		resp.Write([]byte("{\"err\":\"invalid request\"}"))
+	}
+}
+
+// death handler
+func deauthHandler(resp http.ResponseWriter, req *http.Request) {
+	defer req.Body.Close()
+
+	if req.Method == "GET" {
+
+		var deauther Deauther
+
+		body, _ := io.ReadAll(req.Body)
+		err := json.Unmarshal(body, &deauther)
+		if err != nil {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: err.Error(),
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+			return
+		}
+
+		wifiModule, err := NewWiFiModule(deauther.InterfaceName)
+		if err != nil {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: err.Error(),
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+			return
+		}
+
+		bssid, err := net.ParseMAC(deauther.ApMac)
+		if err != nil {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: err.Error(),
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+			return
+		}
+
+		if deauther.ClientMac == "" || strings.ToLower(deauther.ClientMac) == "all" {
+			clients := findApClients(net.HardwareAddr(deauther.ApMac), wifiModule.handle)
+			for _, client := range clients {
+
+				wifiModule.sendDeauthPacket(bssid, client.Endpoint.HW)
+			}
+		} else {
+
+			client, err := net.ParseMAC(deauther.ClientMac)
+			if err != nil {
+
+				errorMessage := v1_common.ErrorMessage{
+					Error: err.Error(),
+				}
+
+				v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+				return
+			}
+
+			wifiModule.sendDeauthPacket(bssid, client)
+		}
+
+		resp.WriteHeader(http.StatusOK)
 	} else {
 		resp.Write([]byte("{\"err\":\"invalid request\"}"))
 	}

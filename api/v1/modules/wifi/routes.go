@@ -17,4 +17,6 @@ func WifiRoutes(baseRoute *mux.Router) {
 	wifiSubRouter.HandleFunc("/scanap", scanApHandler)
 	log.Println("[POST] /api/v1/modules/wifi/scanap")
 
+	wifiSubRouter.HandleFunc("/deauth", deauthHandler)
+	log.Println("[POST] /api/v1/modules/wifi/deauth")
 }
