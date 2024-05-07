@@ -13,7 +13,7 @@ Interfaces path will list device wirless interfaces, think of it as iwconfig.
 ScanAP path will use a wireless interface to scan for access 
 ```console
 curl -X POST 
-     -d "{\"interfaceName\":""}"
+     -d "{\"interfaceName\":"wlan0"}"
      localhost
 ```
 
