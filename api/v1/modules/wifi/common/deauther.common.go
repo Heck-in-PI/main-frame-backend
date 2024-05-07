@@ -193,7 +193,7 @@ func FindApClients(apMac net.HardwareAddr, handle *pcap.Handle) (clients []*netw
 
 				if client != nil {
 					log.Println("client discovered ", client)
-					if filterClient(clients, client) {
+					if FilterClient(clients, client.Endpoint.HwAddress) {
 						clients = append(clients, client)
 					}
 				}
@@ -222,10 +222,10 @@ func discoverClient(radiotap *layers.RadioTap, dot11 *layers.Dot11, apMac net.Ha
 	return nil
 }
 
-func filterClient(clientList []*network.Station, newClient *network.Station) bool {
+func FilterClient(clientListMac []*network.Station, newClientMac string) bool {
 
-	for _, client := range clientList {
-		if client.Endpoint.HwAddress == newClient.Endpoint.HwAddress {
+	for _, clientMac := range clientListMac {
+		if clientMac.Endpoint.HwAddress == newClientMac {
 			return false
 		}
 	}
