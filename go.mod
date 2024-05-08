@@ -14,9 +14,6 @@ require (
 
 require (
 	github.com/bettercap/gatt v0.0.0-20210514133428-df6e615f2f67 // indirect
-	github.com/bettercap/readline v0.0.0-20210228151553-655e48bcb7bf // indirect
-	github.com/chzyer/test v1.0.0 // indirect
-	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/josharian/native v1.1.0 // indirect
 	github.com/malfunkt/iprange v0.9.0 // indirect

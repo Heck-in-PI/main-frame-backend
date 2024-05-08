@@ -11,6 +11,7 @@ import (
 
 	"net/http"
 
+	"github.com/bettercap/bettercap/network"
 	wifi "github.com/mdlayher/wifi"
 	goWireless "github.com/theojulienne/go-wireless"
 )
@@ -130,9 +131,10 @@ func scanApHandler(resp http.ResponseWriter, req *http.Request) {
 
 // death handler
 func deauthHandler(resp http.ResponseWriter, req *http.Request) {
+
 	defer req.Body.Close()
 
-	if req.Method == "GET" {
+	if req.Method == "POST" {
 
 		var deauther wifi_common.Deauther
 
@@ -174,9 +176,46 @@ func deauthHandler(resp http.ResponseWriter, req *http.Request) {
 		}
 
 		if deauther.ClientMac == "" || strings.ToLower(deauther.ClientMac) == "all" {
-			clients := wifi_common.FindApClients(net.HardwareAddr(deauther.ApMac), wifiModule.Handle)
-			for _, client := range clients {
 
+			clients := wifi_common.FindApClients(bssid, wifiModule.Handle)
+			if len(clients) == 0 {
+				errorMessage := v1_common.ErrorMessage{
+					Error: "Can't find client related to ap " + deauther.ApMac,
+				}
+
+				v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+				return
+			}
+
+			// filter out safe clients
+			if len(deauther.SafeClients) != 0 {
+
+				var filteredClient []*network.Station
+				for _, client := range clients {
+					for _, safeClient := range deauther.SafeClients {
+						if client.Endpoint.HwAddress == safeClient {
+							continue
+						}
+
+						filteredClient = append(filteredClient, client)
+					}
+				}
+
+				clients = filteredClient
+				if len(clients) == 0 {
+					errorMessage := v1_common.ErrorMessage{
+						Error: "Can't find other client related to ap " + deauther.ApMac,
+					}
+
+					v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+					return
+				}
+			}
+
+			for _, client := range clients {
+				log.Println("kicking out from:", bssid, ", client: ", client.Endpoint.HW)
 				wifiModule.SendDeauthPacket(bssid, client.Endpoint.HW)
 			}
 		} else {
@@ -193,9 +232,10 @@ func deauthHandler(resp http.ResponseWriter, req *http.Request) {
 				return
 			}
 
+			log.Println("kicking out from:", bssid, ", client: ", client)
 			wifiModule.SendDeauthPacket(bssid, client)
-		}
 
+		}
 		resp.WriteHeader(http.StatusOK)
 	} else {
 		resp.Write([]byte("{\"err\":\"invalid request\"}"))
