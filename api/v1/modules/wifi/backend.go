@@ -12,6 +12,7 @@ import (
 	"net/http"
 
 	"github.com/bettercap/bettercap/network"
+	"github.com/gorilla/mux"
 	wifi "github.com/mdlayher/wifi"
 	goWireless "github.com/theojulienne/go-wireless"
 )
@@ -78,16 +79,13 @@ func scanApHandler(resp http.ResponseWriter, req *http.Request) {
 
 	defer req.Body.Close()
 
-	if req.Method == "POST" {
+	if req.Method == "GET" {
 
-		var interfaceName wifi_common.InterfaceName
-
-		body, _ := io.ReadAll(req.Body)
-		err := json.Unmarshal(body, &interfaceName)
-		if err != nil {
-
+		muxVars := mux.Vars(req)
+		interfaceName := muxVars["interfaceName"]
+		if interfaceName == "" {
 			errorMessage := v1_common.ErrorMessage{
-				Error: err.Error(),
+				Error: "interface name must be specified in path",
 			}
 
 			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
@@ -95,7 +93,7 @@ func scanApHandler(resp http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		client, err := goWireless.NewClient(interfaceName.InterfaceName)
+		client, err := goWireless.NewClient(interfaceName)
 		if err != nil {
 
 			errorMessage := v1_common.ErrorMessage{
