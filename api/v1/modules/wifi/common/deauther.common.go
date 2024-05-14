@@ -22,10 +22,9 @@ import (
 )
 
 type Deauther struct {
-	InterfaceName string
-	ApMac         string
-	ClientMac     string
-	SafeClients   []string
+	ApMac       string
+	ClientMac   string
+	SafeClients []string
 }
 
 const (

@@ -31,7 +31,7 @@ func interfacesHandler(resp http.ResponseWriter, req *http.Request) {
 				Error: err.Error(),
 			}
 
-			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+			v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
 
 			return
 		}
@@ -43,7 +43,7 @@ func interfacesHandler(resp http.ResponseWriter, req *http.Request) {
 				Error: err.Error(),
 			}
 
-			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+			v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
 
 			return
 		}
@@ -100,7 +100,7 @@ func scanApHandler(resp http.ResponseWriter, req *http.Request) {
 				Error: err.Error(),
 			}
 
-			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+			v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
 
 			return
 		}
@@ -115,7 +115,7 @@ func scanApHandler(resp http.ResponseWriter, req *http.Request) {
 				Error: err.Error(),
 			}
 
-			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+			v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
 
 			return
 		}
@@ -123,7 +123,12 @@ func scanApHandler(resp http.ResponseWriter, req *http.Request) {
 		v1_common.JsonResponceHandler(resp, http.StatusOK, aps)
 
 	} else {
-		resp.Write([]byte("{\"err\":\"invalid request\"}"))
+
+		errorMessage := v1_common.ErrorMessage{
+			Error: "Invalid Request",
+		}
+
+		v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
 	}
 }
 
@@ -133,6 +138,18 @@ func deauthHandler(resp http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 
 	if req.Method == "POST" {
+
+		muxVars := mux.Vars(req)
+		interfaceName := muxVars["interfaceName"]
+		if interfaceName == "" {
+			errorMessage := v1_common.ErrorMessage{
+				Error: "interface name must be specified in path",
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+			return
+		}
 
 		var deauther wifi_common.Deauther
 
@@ -149,14 +166,14 @@ func deauthHandler(resp http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		wifiModule, err := wifi_common.NewWiFiModule(deauther.InterfaceName)
+		wifiModule, err := wifi_common.NewWiFiModule(interfaceName)
 		if err != nil {
 
 			errorMessage := v1_common.ErrorMessage{
 				Error: err.Error(),
 			}
 
-			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+			v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
 
 			return
 		}
@@ -168,7 +185,7 @@ func deauthHandler(resp http.ResponseWriter, req *http.Request) {
 				Error: err.Error(),
 			}
 
-			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+			v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
 
 			return
 		}
@@ -181,7 +198,7 @@ func deauthHandler(resp http.ResponseWriter, req *http.Request) {
 					Error: "Can't find client related to ap " + deauther.ApMac,
 				}
 
-				v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+				v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
 
 				return
 			}
@@ -206,7 +223,7 @@ func deauthHandler(resp http.ResponseWriter, req *http.Request) {
 						Error: "Can't find other client related to ap " + deauther.ApMac,
 					}
 
-					v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+					v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
 
 					return
 				}
@@ -225,7 +242,7 @@ func deauthHandler(resp http.ResponseWriter, req *http.Request) {
 					Error: err.Error(),
 				}
 
-				v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+				v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
 
 				return
 			}
@@ -236,7 +253,12 @@ func deauthHandler(resp http.ResponseWriter, req *http.Request) {
 		}
 		resp.WriteHeader(http.StatusOK)
 	} else {
-		resp.Write([]byte("{\"err\":\"invalid request\"}"))
+
+		errorMessage := v1_common.ErrorMessage{
+			Error: "Invalid Request",
+		}
+
+		v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
 	}
 }
 
@@ -301,6 +323,11 @@ func connectApHandler(resp http.ResponseWriter, req *http.Request) {
 		}
 
 	} else {
-		resp.Write([]byte("{\"err\":\"invalid request\"}"))
+
+		errorMessage := v1_common.ErrorMessage{
+			Error: "Invalid Request",
+		}
+
+		v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
 	}
 }
