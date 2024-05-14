@@ -239,3 +239,68 @@ func deauthHandler(resp http.ResponseWriter, req *http.Request) {
 		resp.Write([]byte("{\"err\":\"invalid request\"}"))
 	}
 }
+
+// connect to access point handler
+func connectApHandler(resp http.ResponseWriter, req *http.Request) {
+
+	defer req.Body.Close()
+
+	if req.Method == "POST" {
+
+		muxVars := mux.Vars(req)
+		interfaceName := muxVars["interfaceName"]
+		if interfaceName == "" {
+			errorMessage := v1_common.ErrorMessage{
+				Error: "interface name must be specified in path",
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+			return
+		}
+
+		var connectAp wifi_common.ConnectAp
+
+		body, _ := io.ReadAll(req.Body)
+		err := json.Unmarshal(body, &connectAp)
+		if err != nil {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: err.Error(),
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+			return
+		}
+
+		output, err := wifi_common.ConnectNetwork(interfaceName, connectAp.ApName, connectAp.ApPass)
+		if err != nil {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: err.Error(),
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
+
+			return
+		}
+
+		if strings.Contains(output, "successfully") {
+
+			v1_common.JsonResponceHandler(resp, http.StatusOK, nil)
+			return
+		} else {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: output,
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
+			return
+		}
+
+	} else {
+		resp.Write([]byte("{\"err\":\"invalid request\"}"))
+	}
+}

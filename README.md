@@ -34,6 +34,15 @@ curl -X POST \
      localhost
 ```
 
+#### Connect AP
+ConnectAp path will connect you to an access point
+```console
+curl -X POST \
+     -d "{\"apName\" : \"ssid\", \
+          \"apPass\" : \"pass\"}" \
+     localhost:port/api/v1/modules/wifi/connectAp/INTERFACE_NAME
+```
+
 
 
 >This module in an extraction of bettercap deauth module and an not claiming the code

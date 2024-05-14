@@ -19,4 +19,7 @@ func WifiRoutes(baseRoute *mux.Router) {
 
 	wifiSubRouter.HandleFunc("/deauth", deauthHandler)
 	log.Println("[POST] /api/v1/modules/wifi/deauth")
+
+	wifiSubRouter.HandleFunc("/connectAp/{interfaceName}", connectApHandler)
+	log.Println("[POST] /api/v1/modules/wifi/connectAp/{interfaceName}")
 }
