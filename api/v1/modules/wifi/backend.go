@@ -331,3 +331,46 @@ func connectApHandler(resp http.ResponseWriter, req *http.Request) {
 		v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
 	}
 }
+
+// death handler
+func cptHandshakeHandler(resp http.ResponseWriter, req *http.Request) {
+
+	defer req.Body.Close()
+
+	if req.Method == "GET" {
+
+		muxVars := mux.Vars(req)
+		interfaceName := muxVars["interfaceName"]
+		if interfaceName == "" {
+			errorMessage := v1_common.ErrorMessage{
+				Error: "interface name must be specified in path",
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+			return
+		}
+
+		wifiModule, err := wifi_common.NewWiFiModule(interfaceName)
+		if err != nil {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: err.Error(),
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
+
+			return
+		}
+
+		wifiModule.Start()
+
+	} else {
+
+		errorMessage := v1_common.ErrorMessage{
+			Error: "Invalid Request",
+		}
+
+		v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+	}
+}

@@ -44,3 +44,9 @@ curl -X POST \
           \"apPass\" : \"pass\"}" \
      localhost:port/api/v1/modules/wifi/connectAp/INTERFACE_NAME
 ```
+
+#### CaptureHandshake
+:warning: __UNDERCONSTRUCTION__ :warning:\
+CaptureHandshake path will start capuring handshake all over the flore
+This code is a mess in other turm *SPAGHETTI CODE*, I dont even know how I got it working but it is working KINDOF
+>This module in an extraction of bettercap capture handshake module and am not claiming the code

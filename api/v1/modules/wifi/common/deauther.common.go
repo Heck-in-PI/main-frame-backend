@@ -11,10 +11,12 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"time"
 
 	"github.com/bettercap/bettercap/network"
 	"github.com/bettercap/bettercap/packets"
+	"github.com/bettercap/bettercap/session"
 	"github.com/evilsocket/islazy/tui"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
@@ -53,22 +55,41 @@ type CaptureOptions struct {
 }
 
 type WiFiModule struct {
-	//session.SessionModule
-	iface  *network.Endpoint
-	Handle *pcap.Handle
+	session.SessionModule
+	iface           *network.Endpoint
+	Handle          *pcap.Handle
+	shakesFile      string
+	shakesAggregate bool
+	minRSSI         int
+	aps             map[string]*network.AccessPoint
+	ap              *AccessPoint
 }
 
 func NewWiFiModule(ifaceName string) (*WiFiModule, error) {
 
+	sess, err := session.New()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
 	var iface *network.Endpoint
 
-	iface, err := network.FindInterface(ifaceName)
+	iface, err = network.FindInterface(ifaceName)
 	if err != nil {
 		return nil, err
 	}
 
+	newAp := &AccessPoint{
+		clients: make(map[string]*network.Station),
+	}
+
 	mod := &WiFiModule{
-		iface: iface,
+		SessionModule: session.NewSessionModule("wifi", sess),
+		iface:         iface,
+		minRSSI:       -200,
+		aps:           make(map[string]*network.AccessPoint),
+		ap:            newAp,
 	}
 
 	opts := CAPTURE_DEFAULTS
