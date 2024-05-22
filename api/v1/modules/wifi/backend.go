@@ -11,7 +11,6 @@ import (
 
 	"net/http"
 
-	"github.com/bettercap/bettercap/network"
 	"github.com/gorilla/mux"
 	wifi "github.com/mdlayher/wifi"
 	goWireless "github.com/theojulienne/go-wireless"
@@ -190,67 +189,34 @@ func deauthHandler(resp http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		if deauther.ClientMac == "" || strings.ToLower(deauther.ClientMac) == "all" {
+		client, err := net.ParseMAC(deauther.ClientMac)
+		if err != nil {
 
-			clients := wifi_common.FindApClients(bssid, wifiModule.Handle)
-			if len(clients) == 0 {
-				errorMessage := v1_common.ErrorMessage{
-					Error: "Can't find client related to ap " + deauther.ApMac,
-				}
-
-				v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
-
-				return
+			errorMessage := v1_common.ErrorMessage{
+				Error: err.Error(),
 			}
 
-			// filter out safe clients
-			if len(deauther.SafeClients) != 0 {
+			v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
 
-				var filteredClient []*network.Station
-				for _, client := range clients {
-					for _, safeClient := range deauther.SafeClients {
-						if client.Endpoint.HwAddress == safeClient {
-							continue
-						}
-
-						filteredClient = append(filteredClient, client)
-					}
-				}
-
-				clients = filteredClient
-				if len(clients) == 0 {
-					errorMessage := v1_common.ErrorMessage{
-						Error: "Can't find other client related to ap " + deauther.ApMac,
-					}
-
-					v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
-
-					return
-				}
-			}
-
-			for _, client := range clients {
-				log.Println("kicking out from:", bssid, ", client: ", client.Endpoint.HW)
-				wifiModule.SendDeauthPacket(bssid, client.Endpoint.HW)
-			}
-		} else {
-
-			client, err := net.ParseMAC(deauther.ClientMac)
-			if err != nil {
-
-				errorMessage := v1_common.ErrorMessage{
-					Error: err.Error(),
-				}
-
-				v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
-
-				return
-			}
-
-			log.Println("kicking out from:", bssid, ", client: ", client)
-			wifiModule.SendDeauthPacket(bssid, client)
-
+			return
 		}
+
+		// set wifi to monitor mode
+		err = wifiModule.Configure()
+		if err != nil {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: err.Error(),
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
+
+			return
+		}
+
+		log.Println("kicking out from:", bssid, ", client: ", client)
+		wifiModule.SendDeauthPacket(bssid, client)
+
 		resp.WriteHeader(http.StatusOK)
 	} else {
 
@@ -351,20 +317,21 @@ func cptHandshakeHandler(resp http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		wifiModule, err := wifi_common.NewWiFiModule(interfaceName)
-		if err != nil {
+		/*
+			wifiModule, err := wifi_common.NewWiFiModule(interfaceName)
+			if err != nil {
 
-			errorMessage := v1_common.ErrorMessage{
-				Error: err.Error(),
+				errorMessage := v1_common.ErrorMessage{
+					Error: err.Error(),
+				}
+
+				v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
+
+				return
 			}
 
-			v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
-
-			return
-		}
-
-		wifiModule.Start()
-
+			wifiModule.Start()
+		*/
 	} else {
 
 		errorMessage := v1_common.ErrorMessage{

@@ -1,3 +1,10 @@
+/*
+*	The code in the following file is an extraction from the bettercap projct
+*	ALL CREDID GOES TO THEM
+*	Some functions received little modification to fit the need
+*	Including creating new function
+ */
+
 package wifi_common
 
 import (
@@ -8,54 +15,16 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strconv"
-	"time"
 
-	"github.com/bettercap/bettercap/modules/wifi"
 	"github.com/bettercap/bettercap/network"
 	"github.com/bettercap/bettercap/packets"
-	"github.com/evilsocket/islazy/data"
 	"github.com/evilsocket/islazy/fs"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcapgo"
 )
 
-func (mod *WiFiModule) Start() {
-
-	src := gopacket.NewPacketSource(mod.Handle, mod.Handle.LinkType())
-	pktSourceChan := src.Packets()
-	for packet := range pktSourceChan {
-
-		if packet == nil {
-			continue
-		}
-
-		// perform initial dot11 parsing and layers validation
-		if ok, radiotap, dot11 := packets.Dot11Parse(packet); ok {
-			// check FCS checksum
-			if !dot11.ChecksumValid() {
-				log.Println("skipping dot11 packet with invalid checksum.")
-				continue
-			}
-
-			mod.shakesFile = os.Getenv("SHAKES_FILE")
-			if mod.shakesFile == "" {
-				log.Println("shakesfile can't be empty, check .env")
-				return
-			}
-			mod.shakesAggregate = false
-
-			mod.discoverAccessPoints(radiotap, dot11, packet)
-			for key, value := range mod.aps {
-				log.Println("Key:", key, "Value:", value)
-			}
-			mod.discoverHandshakes(radiotap, dot11, packet)
-		}
-	}
-}
-
-func (mod *WiFiModule) discoverHandshakes(radiotap *layers.RadioTap, dot11 *layers.Dot11, packet gopacket.Packet) {
+func (mod *WiFiModule) discoverHandshakes(dot11 *layers.Dot11, packet gopacket.Packet) {
 
 	isEAPOL := false
 
@@ -71,25 +40,27 @@ func (mod *WiFiModule) discoverHandshakes(radiotap *layers.RadioTap, dot11 *laye
 			}
 		*/
 
-		mac := network.NormalizeMac(apMac.String())
-		ap, found := mod.aps[mac]
-		if !found {
-			mod.Warning("could not find AP with BSSID %s", apMac.String())
-			return
-		}
-
 		// locate the client station, if its BSSID is ours, it means we sent
 		// an association request via wifi.assoc because we're trying to capture
 		// the PMKID from the first EAPOL sent by the AP.
 		// (Reference about PMKID https://hashcat.net/forum/thread-7717.html)
 		// In this case, we need to add ourselves as a client station of the AP
 		// in order to have a consistent association of AP, client and handshakes.
+
+		mod.Lock()
+		mac := network.NormalizeMac(apMac.String())
+		ap, found := mod.aps[mac]
+		if !found {
+			mod.Warning("could not find AP with BSSID %s", apMac.String())
+			return
+		}
 		staIsUs := bytes.Equal(staMac, mod.iface.HW)
 		station, found := ap.Get(staMac.String())
 		staAdded := false
 		if !found {
-			station, staAdded = mod.AddClientIfNew(staMac.String(), ap.Frequency, ap.RSSI)
+			station, staAdded = ap.AddClientIfNew(staMac.String(), ap.Frequency, ap.RSSI)
 		}
+		mod.Unlock()
 
 		rawPMKID := []byte(nil)
 		if !key.Install && key.KeyACK && !key.KeyMIC {
@@ -137,7 +108,7 @@ func (mod *WiFiModule) discoverHandshakes(radiotap *layers.RadioTap, dot11 *laye
 		// if we have unsaved packets as part of the handshake, save them.
 		numUnsaved := station.Handshake.NumUnsaved()
 		shakesFileName := mod.shakesFile
-		if mod.shakesAggregate == false {
+		if !mod.shakesAggregate {
 			shakesFileName = path.Join(shakesFileName, fmt.Sprintf("%s.pcap", ap.PathFriendlyName()))
 		}
 		doSave := numUnsaved > 0
@@ -156,43 +127,39 @@ func (mod *WiFiModule) discoverHandshakes(radiotap *layers.RadioTap, dot11 *laye
 		//   if we captured am half handshake which is not ours OR
 		//   if we captured a full handshake
 		if doSave && (validPMKID || validHalfHandshake || validFullHandshake) {
-			mod.Session.Events.Add("wifi.client.handshake", wifi.HandshakeEvent{
-				File:       shakesFileName,
-				NewPackets: numUnsaved,
-				AP:         apMac.String(),
-				Station:    staMac.String(),
-				PMKID:      rawPMKID,
-				Half:       station.Handshake.Half(),
-				Full:       station.Handshake.Complete(),
-			})
+
 			// make sure the info that we have key material for this AP
 			// is persisted even after stations are pruned due to inactivity
-			ap.WithKeyMaterial(true)
+			mod.Lock()
+			ap.withKeyMaterial = true
+			mod.Unlock()
 		}
 		// if we added ourselves as a client station but we didn't get any
 		// PMKID, just remove it from the list of clients of this AP.
 		if staAdded || (staIsUs && rawPMKID == nil) {
+			mod.Lock()
 			ap.RemoveClient(staMac.String())
+			mod.Unlock()
 		}
 	}
 
 	// quick and dirty heuristic, see thread here https://github.com/bettercap/bettercap/issues/810#issuecomment-805145392
 	if isEAPOL || (dot11.Type.MainType() != layers.Dot11TypeData && dot11.Type.MainType() != layers.Dot11TypeCtrl) {
 		target := (*network.Station)(nil)
-		targetAP := (*network.AccessPoint)(nil)
+		targetAP := (*AccessPoint)(nil)
 
 		// collect target bssids
 		bssids := make([]net.HardwareAddr, 0)
 		for _, addr := range []net.HardwareAddr{dot11.Address1, dot11.Address2, dot11.Address3, dot11.Address4} {
-			if bytes.Equal(addr, network.BroadcastHw) == false {
+			if !bytes.Equal(addr, network.BroadcastHw) {
 				bssids = append(bssids, addr)
 			}
 		}
 
 		// for each AP
-		mod.EachAccessPoint(func(mac string, ap *network.AccessPoint) {
+		mod.EachAccessPoint(func(mac string, ap *AccessPoint) {
 			// only check APs we captured handshakes of
-			if target == nil && ap.HasKeyMaterial() {
+			if target == nil && mod.HasKeyMaterial(ap) {
 				// search client station
 				ap.EachClient(func(mac string, station *network.Station) {
 					// any valid key material for this station?
@@ -219,7 +186,7 @@ func (mod *WiFiModule) discoverHandshakes(radiotap *layers.RadioTap, dot11 *laye
 			target.Handshake.AddExtra(packet)
 
 			shakesFileName := mod.shakesFile
-			if mod.shakesAggregate == false {
+			if !mod.shakesAggregate {
 				shakesFileName = path.Join(shakesFileName, fmt.Sprintf("%s.pcap", targetAP.PathFriendlyName()))
 			}
 			if shakesFileName != "" {
@@ -240,100 +207,6 @@ func allZeros(s []byte) bool {
 		}
 	}
 	return true
-}
-
-func (mod *WiFiModule) discoverAccessPoints(radiotap *layers.RadioTap, dot11 *layers.Dot11, packet gopacket.Packet) {
-	// search for Dot11InformationElementIDSSID
-	if ok, ssid := packets.Dot11ParseIDSSID(packet); ok {
-		from := dot11.Address3
-
-		/*
-			// skip stuff we're sending
-			if bytes.Equal(from, mod.apConfig.BSSID) {
-				return
-			}
-		*/
-
-		if !network.IsZeroMac(from) && !network.IsBroadcastMac(from) {
-			if int(radiotap.DBMAntennaSignal) >= mod.minRSSI {
-				var frequency int
-				bssid := from.String()
-
-				if found, channel := packets.Dot11ParseDSSet(packet); found {
-					frequency = network.Dot11Chan2Freq(channel)
-				} else {
-					frequency = int(radiotap.ChannelFrequency)
-				}
-
-				if ap, isNew := mod.AddIfNew(ssid, bssid, frequency, radiotap.DBMAntennaSignal); !isNew {
-					//set beacon packet on the access point station.
-					//This is for it to be included in the saved handshake file for wifi.assoc
-					ap.Station.Handshake.Beacon = packet
-					ap.EachClient(func(mac string, station *network.Station) {
-						station.Handshake.SetBeacon(packet)
-					})
-				}
-			} else {
-				log.Printf("skipping %s with %d dBm\n", from.String(), radiotap.DBMAntennaSignal)
-			}
-		}
-	}
-}
-
-func (mod *WiFiModule) AddIfNew(ssid, mac string, frequency int, rssi int8) (*network.AccessPoint, bool) {
-
-	mac = network.NormalizeMac(mac)
-
-	if ap, found := mod.aps[mac]; found {
-		ap.LastSeen = time.Now()
-		if rssi != 0 {
-			ap.RSSI = rssi
-		}
-		// always get the cleanest one
-		if !isBogusMacESSID(ssid) {
-			ap.Hostname = ssid
-		}
-
-		return ap, false
-	}
-
-	var unsortedKV *data.UnsortedKV
-	newAp := network.NewAccessPoint(ssid, mac, frequency, rssi, unsortedKV)
-	mod.aps[mac] = newAp
-
-	return newAp, true
-}
-
-func isBogusMacESSID(essid string) bool {
-	for _, c := range essid {
-		if !strconv.IsPrint(c) {
-			return true
-		}
-	}
-	return false
-}
-
-func (mod *WiFiModule) AddClientIfNew(bssid string, frequency int, rssi int8) (*network.Station, bool) {
-
-	bssid = network.NormalizeMac(bssid)
-
-	if s, found := mod.ap.clients[bssid]; found {
-		// update
-		s.Frequency = frequency
-		s.RSSI = rssi
-		s.LastSeen = time.Now()
-
-		return s, false
-	}
-
-	s := network.NewStation("", bssid, frequency, rssi)
-	mod.ap.clients[bssid] = s
-
-	return s, true
-}
-
-type AccessPoint struct {
-	clients map[string]*network.Station
 }
 
 func (mod *WiFiModule) SaveHandshakesTo(fileName string, linkType layers.LinkType) error {
@@ -360,18 +233,23 @@ func (mod *WiFiModule) SaveHandshakesTo(fileName string, linkType layers.LinkTyp
 		}
 	}
 
-	for _, station := range mod.ap.clients {
-		// if half (which includes also complete) or has pmkid
-		if station.Handshake.Any() {
+	mod.Lock()
+	defer mod.Unlock()
 
-			err = nil
-			station.Handshake.EachUnsavedPacket(func(pkt gopacket.Packet) {
-				if err == nil {
-					err = writer.WritePacket(pkt.Metadata().CaptureInfo, pkt.Data())
+	for _, ap := range mod.aps {
+		for _, station := range ap.clients {
+			// if half (which includes also complete) or has pmkid
+			if station.Handshake.Any() {
+
+				err = nil
+				station.Handshake.EachUnsavedPacket(func(pkt gopacket.Packet) {
+					if err == nil {
+						err = writer.WritePacket(pkt.Metadata().CaptureInfo, pkt.Data())
+					}
+				})
+				if err != nil {
+					return err
 				}
-			})
-			if err != nil {
-				return err
 			}
 		}
 	}
@@ -379,7 +257,7 @@ func (mod *WiFiModule) SaveHandshakesTo(fileName string, linkType layers.LinkTyp
 	return nil
 }
 
-func (mod *WiFiModule) EachAccessPoint(cb func(mac string, ap *network.AccessPoint)) {
+func (mod *WiFiModule) EachAccessPoint(cb func(mac string, ap *AccessPoint)) {
 
 	for m, ap := range mod.aps {
 		cb(m, ap)
