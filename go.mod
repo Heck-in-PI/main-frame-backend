@@ -4,19 +4,20 @@ go 1.21.8
 
 require (
 	github.com/bettercap/bettercap v0.0.0-20240107114706-924ff5753dd8
-	github.com/evilsocket/islazy v1.10.6
+	github.com/evilsocket/islazy v1.11.0
 	github.com/google/gopacket v1.1.19
-	github.com/gorilla/mux v1.8.0
+	github.com/gorilla/mux v1.8.1
 	github.com/joho/godotenv v1.5.1
-	github.com/mdlayher/wifi v0.1.0
+	github.com/mdlayher/wifi v0.2.0
 	github.com/theojulienne/go-wireless v1.2.0
 )
 
 require (
 	github.com/bettercap/gatt v0.0.0-20210514133428-df6e615f2f67 // indirect
 	github.com/bettercap/readline v0.0.0-20210228151553-655e48bcb7bf // indirect
-	github.com/dustin/go-humanize v1.0.0 // indirect
-	github.com/google/go-cmp v0.5.9 // indirect
+	github.com/chzyer/logex v1.2.1 // indirect
+	github.com/dustin/go-humanize v1.0.1 // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/josharian/native v1.1.0 // indirect
 	github.com/malfunkt/iprange v0.9.0 // indirect
 	github.com/mattn/go-colorable v0.1.8 // indirect
@@ -30,10 +31,11 @@ require (
 	github.com/miekg/dns v1.1.43 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/robertkrimen/otto v0.0.0-20210614181706-373ff5438452 // indirect
-	golang.org/x/crypto v0.10.0 // indirect
-	golang.org/x/net v0.10.0 // indirect
+	github.com/robertkrimen/otto v0.2.1 // indirect
+	golang.org/x/crypto v0.22.0 // indirect
+	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.9.0 // indirect
+	golang.org/x/sys v0.19.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 )

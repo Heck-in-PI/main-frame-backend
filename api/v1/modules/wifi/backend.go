@@ -8,13 +8,15 @@ import (
 	v1_common "mf-backend/api/v1/v1Common"
 	"net"
 	"strings"
+	"time"
 
 	"net/http"
 
 	"github.com/gorilla/mux"
 	wifi "github.com/mdlayher/wifi"
-	goWireless "github.com/theojulienne/go-wireless"
 )
+
+var WifiModule *wifi_common.WiFiModule
 
 // interfaces handler
 func interfacesHandler(resp http.ResponseWriter, req *http.Request) {
@@ -92,35 +94,97 @@ func scanApHandler(resp http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		client, err := goWireless.NewClient(interfaceName)
+		var err error
+		WifiModule, err = wifi_common.NewWiFiModule(interfaceName)
 		if err != nil {
 
 			errorMessage := v1_common.ErrorMessage{
 				Error: err.Error(),
 			}
 
-			v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
+			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
 
 			return
 		}
 
-		log.Println(client)
-		defer client.Close()
-
-		aps, err := client.Scan()
+		err = WifiModule.Start()
 		if err != nil {
 
 			errorMessage := v1_common.ErrorMessage{
 				Error: err.Error(),
 			}
 
-			v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
+			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
 
 			return
 		}
 
-		v1_common.JsonResponceHandler(resp, http.StatusOK, aps)
+		retried := false
+		for retry := 0; ; retry++ {
 
+			if WifiModule.PktSourceChan != nil {
+				go WifiModule.AccessPointPacketAnalyzer()
+				break
+			} else if retried {
+				errorMessage := v1_common.ErrorMessage{
+					Error: "can't get packets",
+				}
+
+				v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+				return
+			} else {
+				time.Sleep(1 * time.Second)
+				retried = true
+			}
+		}
+	} else {
+
+		errorMessage := v1_common.ErrorMessage{
+			Error: "Invalid Request",
+		}
+
+		v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+	}
+}
+
+// scan client point handler
+func scanClientHandler(resp http.ResponseWriter, req *http.Request) {
+
+	defer req.Body.Close()
+
+	if req.Method == "GET" {
+
+		if (WifiModule == &wifi_common.WiFiModule{}) {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: "ap scanner must be running",
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+			return
+		}
+
+		retried := false
+		for retry := 0; ; retry++ {
+
+			if WifiModule.PktSourceChan != nil {
+				go WifiModule.DiscoverClientAnalyzer()
+				break
+			} else if retried {
+				errorMessage := v1_common.ErrorMessage{
+					Error: "can't get packets",
+				}
+
+				v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+				return
+			} else {
+				time.Sleep(1 * time.Second)
+				retried = true
+			}
+		}
 	} else {
 
 		errorMessage := v1_common.ErrorMessage{
@@ -304,20 +368,19 @@ func cptHandshakeHandler(resp http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 
 	if req.Method == "GET" {
+		/*
+			muxVars := mux.Vars(req)
+			interfaceName := muxVars["interfaceName"]
+			if interfaceName == "" {
+				errorMessage := v1_common.ErrorMessage{
+					Error: "interface name must be specified in path",
+				}
 
-		muxVars := mux.Vars(req)
-		interfaceName := muxVars["interfaceName"]
-		if interfaceName == "" {
-			errorMessage := v1_common.ErrorMessage{
-				Error: "interface name must be specified in path",
+				v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+				return
 			}
 
-			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
-
-			return
-		}
-
-		/*
 			wifiModule, err := wifi_common.NewWiFiModule(interfaceName)
 			if err != nil {
 
@@ -330,8 +393,30 @@ func cptHandshakeHandler(resp http.ResponseWriter, req *http.Request) {
 				return
 			}
 
-			wifiModule.Start()
+			err = wifiModule.Start()
+			if err != nil {
+
+				errorMessage := v1_common.ErrorMessage{
+					Error: err.Error(),
+				}
+
+				v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
+
+				return
+			}
 		*/
+
+		err := WifiModule.ForcedStop()
+		if err != nil {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: err.Error(),
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
+
+			return
+		}
 	} else {
 
 		errorMessage := v1_common.ErrorMessage{

@@ -51,7 +51,7 @@ func (mod *WiFiModule) discoverHandshakes(dot11 *layers.Dot11, packet gopacket.P
 		mac := network.NormalizeMac(apMac.String())
 		ap, found := mod.aps[mac]
 		if !found {
-			mod.Warning("could not find AP with BSSID %s", apMac.String())
+			log.Printf("could not find AP with BSSID %s\n", apMac.String())
 			return
 		}
 		staIsUs := bytes.Equal(staMac, mod.iface.HW)
