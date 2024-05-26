@@ -20,12 +20,15 @@ func WifiRoutes(baseRoute *mux.Router) {
 	wifiSubRouter.HandleFunc("/scanClient", scanClientHandler)
 	log.Println("[GET] /api/v1/modules/wifi/scanClient")
 
-	wifiSubRouter.HandleFunc("/deauth/{interfaceName}", deauthHandler)
-	log.Println("[POST] /api/v1/modules/wifi/deauth/{interfaceName}")
+	wifiSubRouter.HandleFunc("/deauth", deauthHandler)
+	log.Println("[POST] /api/v1/modules/wifi/deauth")
 
 	wifiSubRouter.HandleFunc("/connectAp/{interfaceName}", connectApHandler)
 	log.Println("[POST] /api/v1/modules/wifi/connectAp/{interfaceName}")
 
-	wifiSubRouter.HandleFunc("/cptHandshake/{interfaceName}", cptHandshakeHandler)
-	log.Println("[GET] /api/v1/modules/wifi/cptHandshake/{interfaceName}")
+	wifiSubRouter.HandleFunc("/cptHandshake", cptHandshakeHandler)
+	log.Println("[GET] /api/v1/modules/wifi/cptHandshake")
+
+	wifiSubRouter.HandleFunc("/stop", stopHandler)
+	log.Println("[GET] /api/v1/modules/wifi/stop")
 }

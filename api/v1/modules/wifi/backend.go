@@ -122,10 +122,21 @@ func scanApHandler(resp http.ResponseWriter, req *http.Request) {
 		retried := false
 		for retry := 0; ; retry++ {
 
-			if WifiModule.PktSourceChan != nil {
+			if WifiModule.PktSourceChan != nil && len(WifiModule.PktSourceChan) != 0 {
 				go WifiModule.AccessPointPacketAnalyzer()
 				break
 			} else if retried {
+				err = WifiModule.ForcedStop()
+				if err != nil {
+					errorMessage := v1_common.ErrorMessage{
+						Error: err.Error(),
+					}
+
+					v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+					return
+				}
+
 				errorMessage := v1_common.ErrorMessage{
 					Error: "can't get packets",
 				}
@@ -134,6 +145,7 @@ func scanApHandler(resp http.ResponseWriter, req *http.Request) {
 
 				return
 			} else {
+				log.Println("cant find packet retry")
 				time.Sleep(1 * time.Second)
 				retried = true
 			}
@@ -169,10 +181,21 @@ func scanClientHandler(resp http.ResponseWriter, req *http.Request) {
 		retried := false
 		for retry := 0; ; retry++ {
 
-			if WifiModule.PktSourceChan != nil {
+			if WifiModule.PktSourceChan != nil && len(WifiModule.PktSourceChan) != 0 {
 				go WifiModule.DiscoverClientAnalyzer()
 				break
 			} else if retried {
+				err := WifiModule.ForcedStop()
+				if err != nil {
+					errorMessage := v1_common.ErrorMessage{
+						Error: err.Error(),
+					}
+
+					v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+					return
+				}
+
 				errorMessage := v1_common.ErrorMessage{
 					Error: "can't get packets",
 				}
@@ -181,6 +204,7 @@ func scanClientHandler(resp http.ResponseWriter, req *http.Request) {
 
 				return
 			} else {
+				log.Println("cant find packet retry")
 				time.Sleep(1 * time.Second)
 				retried = true
 			}
@@ -202,18 +226,6 @@ func deauthHandler(resp http.ResponseWriter, req *http.Request) {
 
 	if req.Method == "POST" {
 
-		muxVars := mux.Vars(req)
-		interfaceName := muxVars["interfaceName"]
-		if interfaceName == "" {
-			errorMessage := v1_common.ErrorMessage{
-				Error: "interface name must be specified in path",
-			}
-
-			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
-
-			return
-		}
-
 		var deauther wifi_common.Deauther
 
 		body, _ := io.ReadAll(req.Body)
@@ -229,14 +241,13 @@ func deauthHandler(resp http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		wifiModule, err := wifi_common.NewWiFiModule(interfaceName)
-		if err != nil {
+		if (WifiModule == &wifi_common.WiFiModule{}) {
 
 			errorMessage := v1_common.ErrorMessage{
-				Error: err.Error(),
+				Error: "ap scanner must be running",
 			}
 
-			v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
+			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
 
 			return
 		}
@@ -266,7 +277,7 @@ func deauthHandler(resp http.ResponseWriter, req *http.Request) {
 		}
 
 		// set wifi to monitor mode
-		err = wifiModule.Configure()
+		err = WifiModule.Configure()
 		if err != nil {
 
 			errorMessage := v1_common.ErrorMessage{
@@ -279,7 +290,7 @@ func deauthHandler(resp http.ResponseWriter, req *http.Request) {
 		}
 
 		log.Println("kicking out from:", bssid, ", client: ", client)
-		wifiModule.SendDeauthPacket(bssid, client)
+		WifiModule.SendDeauthPacket(bssid, client)
 
 		resp.WriteHeader(http.StatusOK)
 	} else {
@@ -362,49 +373,71 @@ func connectApHandler(resp http.ResponseWriter, req *http.Request) {
 	}
 }
 
-// death handler
+// capture handshake handler
 func cptHandshakeHandler(resp http.ResponseWriter, req *http.Request) {
 
 	defer req.Body.Close()
 
 	if req.Method == "GET" {
-		/*
-			muxVars := mux.Vars(req)
-			interfaceName := muxVars["interfaceName"]
-			if interfaceName == "" {
+
+		if (WifiModule == &wifi_common.WiFiModule{}) {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: "ap scanner must be running",
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+			return
+		}
+
+		retried := false
+		for retry := 0; ; retry++ {
+
+			if WifiModule.PktSourceChan != nil && len(WifiModule.PktSourceChan) != 0 {
+				go WifiModule.DiscoverHandshakeAnalyzer()
+				break
+			} else if retried {
+				err := WifiModule.ForcedStop()
+				if err != nil {
+					errorMessage := v1_common.ErrorMessage{
+						Error: err.Error(),
+					}
+
+					v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+					return
+				}
+
 				errorMessage := v1_common.ErrorMessage{
-					Error: "interface name must be specified in path",
+					Error: "can't get packets",
 				}
 
 				v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
 
 				return
+			} else {
+				log.Println("cant find packet retry")
+				time.Sleep(1 * time.Second)
+				retried = true
 			}
+		}
+	} else {
 
-			wifiModule, err := wifi_common.NewWiFiModule(interfaceName)
-			if err != nil {
+		errorMessage := v1_common.ErrorMessage{
+			Error: "Invalid Request",
+		}
 
-				errorMessage := v1_common.ErrorMessage{
-					Error: err.Error(),
-				}
+		v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+	}
+}
 
-				v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
+// shut down recon
+func stopHandler(resp http.ResponseWriter, req *http.Request) {
 
-				return
-			}
+	defer req.Body.Close()
 
-			err = wifiModule.Start()
-			if err != nil {
-
-				errorMessage := v1_common.ErrorMessage{
-					Error: err.Error(),
-				}
-
-				v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
-
-				return
-			}
-		*/
+	if req.Method == "GET" {
 
 		err := WifiModule.ForcedStop()
 		if err != nil {

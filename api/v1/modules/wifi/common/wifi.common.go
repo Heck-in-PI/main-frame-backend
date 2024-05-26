@@ -186,9 +186,11 @@ func (mod *WiFiModule) AccessPointPacketAnalyzer() {
 		}
 	}
 
-	mod.Lock()
-	mod.pktSourceChanClosed = true
-	mod.Unlock()
+	if !mod.pktSourceChanClosed {
+		mod.Lock()
+		mod.pktSourceChanClosed = true
+		mod.Unlock()
+	}
 }
 
 func (mod *WiFiModule) DiscoverClientAnalyzer() {
@@ -213,9 +215,40 @@ func (mod *WiFiModule) DiscoverClientAnalyzer() {
 		}
 	}
 
-	mod.Lock()
-	mod.pktSourceChanClosed = true
-	mod.Unlock()
+	if !mod.pktSourceChanClosed {
+		mod.Lock()
+		mod.pktSourceChanClosed = true
+		mod.Unlock()
+	}
+}
+
+func (mod *WiFiModule) DiscoverHandshakeAnalyzer() {
+
+	for packet := range mod.PktSourceChan {
+
+		if !mod.Running() {
+			break
+		} else if packet == nil {
+			continue
+		}
+
+		// perform initial dot11 parsing and layers validation
+		if ok, _, dot11 := packets.Dot11Parse(packet); ok {
+			// check FCS checksum
+			if !dot11.ChecksumValid() {
+				log.Println("skipping dot11 packet with invalid checksum.")
+				continue
+			}
+
+			mod.discoverHandshakes(dot11, packet)
+		}
+	}
+
+	if !mod.pktSourceChanClosed {
+		mod.Lock()
+		mod.pktSourceChanClosed = true
+		mod.Unlock()
+	}
 }
 
 func (mod *WiFiModule) ForcedStop() error {

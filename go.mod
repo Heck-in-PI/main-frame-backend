@@ -9,7 +9,6 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/joho/godotenv v1.5.1
 	github.com/mdlayher/wifi v0.2.0
-	github.com/theojulienne/go-wireless v1.2.0
 )
 
 require (
