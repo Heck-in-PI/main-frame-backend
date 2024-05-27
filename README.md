@@ -9,19 +9,26 @@ Wifi module will be responsible of every thing related to wifi application
 
 #### Interfaces
 Interfaces path will list device wirless interfaces, think of it as iwconfig.
-
 ```console
 curl localhost:port/api/v1/modules/wifi/interface
 ```
 
 #### ScanAP
-ScanAP path will use a wireless interface to scan for access 
+ScanAP path will put wireless interface in monitor mode and capture packets and filter for access point 
 ```console
 curl localhost:port/api/v1/modules/wifi/scanAp/INTERFACE_NAME
 ```
+>This path start a goroutine and keep running in background
+
+#### ScanClient
+ScanClient path will use the wireless interface in monitor mode and capture packets and filter for the already found access point's client 
+```console
+curl localhost:port/api/v1/modules/wifi/scanClient
+```
+>This path start a goroutine and keep running in background
+>For this to work the ScanAP should be already running
 
 #### Deauth
-:warning: __UNDERCONSTRUCTION__ :warning:\
 Deauth path will deauthenticate user from an access point.\
 Client mac can be specific mac address.
 >NOTE: specific client mac is string in the format of a mac address e.g. FF:FF:FF:FF:FF:FF
@@ -32,7 +39,6 @@ curl -X POST \
           \"clientMac\" : \"FF:FF:FF:FF:FF:FF\", }" \
      localhost:port/api/v1/modules/wifi/deauth/INTERFACE_NAME
 ```
->This module in an extraction of bettercap deauth module and am not claiming the code
 
 #### ConnectAP
 ConnectAp path will connect you to an access point
@@ -44,8 +50,17 @@ curl -X POST \
 ```
 
 #### CaptureHandshake
-:warning: __UNDERCONSTRUCTION__ :warning:\
-:warning: __NOT WORKING__ :warning:\
-CaptureHandshake path will start capuring handshake all over the flore
-This code is a mess in other turm *SPAGHETTI CODE*, I dont even know how I got it working but it is working KINDOF
->This module in an extraction of bettercap capture handshake module and am not claiming the code
+CaptureHandshake path will use the wireless interface in monitor mode and capture packets and filter handshakes all over the flore
+```console
+curl localhost:port/api/v1/modules/wifi/cptHandshake
+```
+>This path start a goroutine and keep running in background
+>For this to work the ScanAP and ScanClient should be already running
+
+#### Stop
+Stop path will kill all process of recon
+```console
+curl localhost:port/api/v1/modules/wifi/stop
+```
+
+>ScanAp, ScanClient, Deauth, CaptureHandshake are either extracted from bettercap or inspired by them am not claiming the code please support the official release 
