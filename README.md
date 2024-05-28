@@ -68,4 +68,11 @@ StopScanClient path will kill process of searching for access point clients
 ```console
 curl localhost:port/api/v1/modules/wifi/stopScanClient
 ```
+
+#### StopCptHandshake
+StopCptHandshake path will kill process of searching access points handshakes 
+```console
+curl localhost:port/api/v1/modules/wifi/stopCptHandshake
+```
+
 >ScanAp, ScanClient, Deauth, CaptureHandshake are either extracted from bettercap or inspired by them am not claiming the code please support the official release 

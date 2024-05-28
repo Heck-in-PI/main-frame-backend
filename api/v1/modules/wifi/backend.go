@@ -181,7 +181,7 @@ func scanClientHandler(resp http.ResponseWriter, req *http.Request) {
 		retried := false
 		for retry := 0; ; retry++ {
 
-			if WifiModule.PktSourceChan != nil && len(WifiModule.PktSourceChan) != 0 {
+			if WifiModule.PktSourceChan != nil { // && len(WifiModule.PktSourceChan) != 0 {
 				wifi_common.ScanClientChanel = make(chan bool)
 				go WifiModule.DiscoverClientAnalyzer()
 				break
@@ -385,7 +385,8 @@ func cptHandshakeHandler(resp http.ResponseWriter, req *http.Request) {
 		retried := false
 		for retry := 0; ; retry++ {
 
-			if WifiModule.PktSourceChan != nil && len(WifiModule.PktSourceChan) != 0 {
+			if WifiModule.PktSourceChan != nil { // && len(WifiModule.PktSourceChan) != 0 {
+				wifi_common.CptHandshakeHandlerChanel = make(chan bool)
 				go WifiModule.DiscoverHandshakeAnalyzer()
 				break
 			} else if retried {
@@ -459,6 +460,24 @@ func stopScanClientHandler(resp http.ResponseWriter, req *http.Request) {
 	if req.Method == "GET" {
 
 		wifi_common.ScanClientChanel <- true
+	} else {
+
+		errorMessage := v1_common.ErrorMessage{
+			Error: "Invalid Request",
+		}
+
+		v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+	}
+}
+
+// shut down handshake recon
+func stopCptHandshakeHandler(resp http.ResponseWriter, req *http.Request) {
+
+	defer req.Body.Close()
+
+	if req.Method == "GET" {
+
+		wifi_common.CptHandshakeHandlerChanel <- true
 	} else {
 
 		errorMessage := v1_common.ErrorMessage{

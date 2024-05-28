@@ -56,6 +56,7 @@ type AccessPoint struct {
 }
 
 var ScanClientChanel chan bool
+var CptHandshakeHandlerChanel chan bool
 
 func NewWiFiModule(ifaceName string) (*WiFiModule, error) {
 
@@ -234,6 +235,12 @@ func (mod *WiFiModule) DiscoverClientAnalyzer() {
 func (mod *WiFiModule) DiscoverHandshakeAnalyzer() {
 
 	for packet := range mod.PktSourceChan {
+
+		select {
+		case <-CptHandshakeHandlerChanel:
+			return
+		default:
+		}
 
 		if !mod.Running() {
 			break
