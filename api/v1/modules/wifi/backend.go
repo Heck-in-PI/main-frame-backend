@@ -167,7 +167,7 @@ func scanClientHandler(resp http.ResponseWriter, req *http.Request) {
 
 	if req.Method == "GET" {
 
-		if (WifiModule == &wifi_common.WiFiModule{}) {
+		if WifiModule == nil {
 
 			errorMessage := v1_common.ErrorMessage{
 				Error: "ap scanner must be running",
@@ -232,7 +232,7 @@ func deauthHandler(resp http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		if (WifiModule == &wifi_common.WiFiModule{}) {
+		if WifiModule == nil {
 
 			errorMessage := v1_common.ErrorMessage{
 				Error: "ap scanner must be running",
@@ -371,7 +371,7 @@ func cptHandshakeHandler(resp http.ResponseWriter, req *http.Request) {
 
 	if req.Method == "GET" {
 
-		if (WifiModule == &wifi_common.WiFiModule{}) {
+		if WifiModule == nil {
 
 			errorMessage := v1_common.ErrorMessage{
 				Error: "ap scanner must be running",
