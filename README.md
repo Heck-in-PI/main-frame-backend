@@ -63,4 +63,9 @@ Stop path will kill all process of recon
 curl localhost:port/api/v1/modules/wifi/stop
 ```
 
+#### StopScanClient
+StopScanClient path will kill process of searching for access point clients 
+```console
+curl localhost:port/api/v1/modules/wifi/stopScanClient
+```
 >ScanAp, ScanClient, Deauth, CaptureHandshake are either extracted from bettercap or inspired by them am not claiming the code please support the official release 

@@ -55,6 +55,8 @@ type AccessPoint struct {
 	withKeyMaterial bool
 }
 
+var ScanClientChanel chan bool
+
 func NewWiFiModule(ifaceName string) (*WiFiModule, error) {
 
 	sess, err := NewSession()
@@ -183,6 +185,7 @@ func (mod *WiFiModule) AccessPointPacketAnalyzer() {
 			}
 
 			mod.discoverAccessPoints(radiotap, dot11, packet)
+			log.Println(mod.aps)
 		}
 	}
 
@@ -196,6 +199,12 @@ func (mod *WiFiModule) AccessPointPacketAnalyzer() {
 func (mod *WiFiModule) DiscoverClientAnalyzer() {
 
 	for packet := range mod.PktSourceChan {
+
+		select {
+		case <-ScanClientChanel:
+			return
+		default:
+		}
 
 		if !mod.Running() {
 			break

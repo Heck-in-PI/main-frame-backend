@@ -182,19 +182,10 @@ func scanClientHandler(resp http.ResponseWriter, req *http.Request) {
 		for retry := 0; ; retry++ {
 
 			if WifiModule.PktSourceChan != nil && len(WifiModule.PktSourceChan) != 0 {
+				wifi_common.ScanClientChanel = make(chan bool)
 				go WifiModule.DiscoverClientAnalyzer()
 				break
 			} else if retried {
-				err := WifiModule.ForcedStop()
-				if err != nil {
-					errorMessage := v1_common.ErrorMessage{
-						Error: err.Error(),
-					}
-
-					v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
-
-					return
-				}
 
 				errorMessage := v1_common.ErrorMessage{
 					Error: "can't get packets",
@@ -450,6 +441,24 @@ func stopHandler(resp http.ResponseWriter, req *http.Request) {
 
 			return
 		}
+	} else {
+
+		errorMessage := v1_common.ErrorMessage{
+			Error: "Invalid Request",
+		}
+
+		v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+	}
+}
+
+// shut down client recon
+func stopScanClientHandler(resp http.ResponseWriter, req *http.Request) {
+
+	defer req.Body.Close()
+
+	if req.Method == "GET" {
+
+		wifi_common.ScanClientChanel <- true
 	} else {
 
 		errorMessage := v1_common.ErrorMessage{

@@ -31,4 +31,7 @@ func WifiRoutes(baseRoute *mux.Router) {
 
 	wifiSubRouter.HandleFunc("/stop", stopHandler)
 	log.Println("[GET] /api/v1/modules/wifi/stop")
+
+	wifiSubRouter.HandleFunc("/stopScanClient", stopScanClientHandler)
+	log.Println("[GET] /api/v1/modules/wifi/stopScanClient")
 }
