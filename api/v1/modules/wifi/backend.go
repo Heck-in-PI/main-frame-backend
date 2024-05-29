@@ -431,6 +431,17 @@ func stopHandler(resp http.ResponseWriter, req *http.Request) {
 
 	if req.Method == "GET" {
 
+		if WifiModule == nil {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: "ap scanner must be running",
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+			return
+		}
+
 		err := WifiModule.ForcedStop()
 		if err != nil {
 
@@ -459,6 +470,17 @@ func stopScanClientHandler(resp http.ResponseWriter, req *http.Request) {
 
 	if req.Method == "GET" {
 
+		if wifi_common.ScanClientChanel == nil {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: "client scanning must be running",
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+			return
+		}
+
 		wifi_common.ScanClientChanel <- true
 	} else {
 
@@ -476,6 +498,17 @@ func stopCptHandshakeHandler(resp http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 
 	if req.Method == "GET" {
+
+		if wifi_common.CptHandshakeHandlerChanel == nil {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: "capture handshake scanning must be running",
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+			return
+		}
 
 		wifi_common.CptHandshakeHandlerChanel <- true
 	} else {
