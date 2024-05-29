@@ -424,6 +424,77 @@ func cptHandshakeHandler(resp http.ResponseWriter, req *http.Request) {
 	}
 }
 
+// probe handler
+func probeHandler(resp http.ResponseWriter, req *http.Request) {
+
+	defer req.Body.Close()
+
+	if req.Method == "POST" {
+
+		var prober wifi_common.Prober
+
+		body, _ := io.ReadAll(req.Body)
+		err := json.Unmarshal(body, &prober)
+		if err != nil {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: err.Error(),
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+			return
+		}
+
+		if WifiModule == nil {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: "ap scanner must be running",
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+			return
+		}
+
+		bssid, err := net.ParseMAC(prober.ApMac)
+		if err != nil {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: err.Error(),
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
+
+			return
+		}
+
+		// set wifi to monitor mode
+		err = WifiModule.Configure()
+		if err != nil {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: err.Error(),
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
+
+			return
+		}
+
+		WifiModule.SendProbePacket(bssid, prober.ApName)
+
+		resp.WriteHeader(http.StatusOK)
+	} else {
+
+		errorMessage := v1_common.ErrorMessage{
+			Error: "Invalid Request",
+		}
+
+		v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+	}
+}
+
 // shut down recon
 func stopHandler(resp http.ResponseWriter, req *http.Request) {
 

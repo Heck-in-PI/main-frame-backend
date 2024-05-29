@@ -29,6 +29,9 @@ func WifiRoutes(baseRoute *mux.Router) {
 	wifiSubRouter.HandleFunc("/cptHandshake", cptHandshakeHandler)
 	log.Println("[GET] /api/v1/modules/wifi/cptHandshake")
 
+	wifiSubRouter.HandleFunc("/probe", probeHandler)
+	log.Println("[POST] /api/v1/modules/wifi/probe")
+
 	wifiSubRouter.HandleFunc("/stop", stopHandler)
 	log.Println("[GET] /api/v1/modules/wifi/stop")
 

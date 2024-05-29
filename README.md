@@ -9,20 +9,20 @@ Wifi module will be responsible of every thing related to wifi application
 
 #### Interfaces
 Interfaces path will list device wirless interfaces, think of it as iwconfig.
-```console
+```bash
 curl localhost:port/api/v1/modules/wifi/interface
 ```
 
 #### ScanAP
 ScanAP path will put wireless interface in monitor mode and capture packets and filter for access point 
-```console
+```bash
 curl localhost:port/api/v1/modules/wifi/scanAp/INTERFACE_NAME
 ```
 >This path start a goroutine and keep running in background
 
 #### ScanClient
 ScanClient path will use the wireless interface in monitor mode and capture packets and filter for the already found access point's client 
-```console
+```bash
 curl localhost:port/api/v1/modules/wifi/scanClient
 ```
 >This path start a goroutine and keep running in background
@@ -33,16 +33,16 @@ Deauth path will deauthenticate user from an access point.\
 Client mac can be specific mac address.
 >NOTE: specific client mac is string in the format of a mac address e.g. FF:FF:FF:FF:FF:FF
 
-```console
+```bash
 curl -X POST \
-     -d "{\"apMac\" : \"AP_NAME\", \
-          \"clientMac\" : \"FF:FF:FF:FF:FF:FF\", }" \
-     localhost:port/api/v1/modules/wifi/deauth/INTERFACE_NAME
+     -d "{\"apMac\" : \"FF:FF:FF:FF:FF:FF\", \
+          \"clientMac\" : \"FF:FF:FF:FF:FF:FF\" }" \
+     localhost:port/api/v1/modules/wifi/deauth
 ```
 
 #### ConnectAP
 ConnectAp path will connect you to an access point
-```console
+```bash
 curl -X POST \
      -d "{\"apName\" : \"ssid\", \
           \"apPass\" : \"pass\"}" \
@@ -51,27 +51,38 @@ curl -X POST \
 
 #### CaptureHandshake
 CaptureHandshake path will use the wireless interface in monitor mode and capture packets and filter handshakes all over the flore
-```console
+```bash
 curl localhost:port/api/v1/modules/wifi/cptHandshake
 ```
 >This path start a goroutine and keep running in background
 >For this to work the ScanAP and ScanClient should be already running
 
+#### Probe
+Probe path will send a fake client probe with the given station BSSID, searching for ESSID.\
+>NOTE: specific ap mac is string in the format of a mac address e.g. FF:FF:FF:FF:FF:FF
+
+```bash
+curl -X POST \
+     -d "{\"apMac\" : \"FF:FF:FF:FF:FF:FF\", \
+          \"apName\" : \"AP_NAME\" }" \
+     localhost:port/api/v1/modules/wifi/probe
+```
+
 #### Stop
 Stop path will kill all process of recon
-```console
+```bash
 curl localhost:port/api/v1/modules/wifi/stop
 ```
 
 #### StopScanClient
-StopScanClient path will kill process of searching for access point clients 
-```console
+StopScanClient path will kill process of searching for access point clients
+```bash
 curl localhost:port/api/v1/modules/wifi/stopScanClient
 ```
 
 #### StopCptHandshake
 StopCptHandshake path will kill process of searching access points handshakes 
-```console
+```bash
 curl localhost:port/api/v1/modules/wifi/stopCptHandshake
 ```
 
