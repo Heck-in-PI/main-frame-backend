@@ -1,6 +1,7 @@
 package wifi_common
 
 import (
+	"errors"
 	"log"
 	"net"
 	"time"
@@ -33,11 +34,26 @@ func (mod *WiFiModule) ApSettings(beaconer Beaconer) error {
 
 func (mod *WiFiModule) StartAp() error {
 
+	if mod.apRunning {
+		return errors.New(mod.apConfig.SSID + " is running")
+	}
+
 	go func() {
+
+		mod.apRunning = true
+		defer func() {
+			mod.apRunning = false
+		}()
 
 		for seqn := uint16(0); mod.Running(); seqn++ {
 			mod.writes.Add(1)
 			defer mod.writes.Done()
+
+			select {
+			case <-BeaconerChanel:
+				return
+			default:
+			}
 
 			if err, pkt := packets.NewDot11Beacon(mod.apConfig, seqn); err != nil {
 				log.Printf("could not create beacon packet: %s\n", err)

@@ -495,7 +495,7 @@ func probeHandler(resp http.ResponseWriter, req *http.Request) {
 	}
 }
 
-// probe handler
+// beacon handler
 func beaconHandler(resp http.ResponseWriter, req *http.Request) {
 
 	defer req.Body.Close()
@@ -540,6 +540,7 @@ func beaconHandler(resp http.ResponseWriter, req *http.Request) {
 			return
 		}
 
+		wifi_common.BeaconerChanel = make(chan bool)
 		err = WifiModule.StartAp()
 		if err != nil {
 
@@ -650,6 +651,35 @@ func stopCptHandshakeHandler(resp http.ResponseWriter, req *http.Request) {
 		}
 
 		wifi_common.CptHandshakeHandlerChanel <- true
+	} else {
+
+		errorMessage := v1_common.ErrorMessage{
+			Error: "Invalid Request",
+		}
+
+		v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+	}
+}
+
+// shut down handshake recon
+func stopBeaconerHandler(resp http.ResponseWriter, req *http.Request) {
+
+	defer req.Body.Close()
+
+	if req.Method == "GET" {
+
+		if wifi_common.BeaconerChanel == nil {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: "capture handshake scanning must be running",
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+			return
+		}
+
+		wifi_common.BeaconerChanel <- true
 	} else {
 
 		errorMessage := v1_common.ErrorMessage{

@@ -41,6 +41,7 @@ type WiFiModule struct {
 	channel             int
 	apTTL               int
 	staTTL              int
+	apRunning           bool
 	apConfig            packets.Dot11ApConfig
 	hopChanges          chan bool
 	reads               *sync.WaitGroup
@@ -59,6 +60,7 @@ type AccessPoint struct {
 
 var ScanClientChanel chan bool
 var CptHandshakeHandlerChanel chan bool
+var BeaconerChanel chan bool
 
 func NewWiFiModule(ifaceName string) (*WiFiModule, error) {
 

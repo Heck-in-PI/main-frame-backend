@@ -76,8 +76,8 @@ Beacon path will send a fake fake management beacons in order to create an acces
 curl -X POST \
      -d "{\"apName\" : \"AP_NAME\",\
           \"apMac\" : \"FF:FF:FF:FF:FF:FF\", \
-          \"ApChannel"\ : 1, \
-          \"ApEncryption"\ : ture }" \
+          \"ApChannel\" : 1, \
+          \"ApEncryption\" : true }" \
      localhost:port/api/v1/modules/wifi/beacon
 ```
 
@@ -97,6 +97,12 @@ curl localhost:port/api/v1/modules/wifi/stopScanClient
 StopCptHandshake path will kill process of searching access points handshakes 
 ```bash
 curl localhost:port/api/v1/modules/wifi/stopCptHandshake
+```
+
+#### StopBeaconer
+StopBeaconer path will kill process of sending beacons.
+```bash
+curl localhost:port/api/v1/modules/wifi/stopBeaconer
 ```
 
 >ScanAp, ScanClient, Deauth, CaptureHandshake are either extracted from bettercap or inspired by them am not claiming the code please support the official release 

@@ -43,4 +43,7 @@ func WifiRoutes(baseRoute *mux.Router) {
 
 	wifiSubRouter.HandleFunc("/stopCptHandshake", stopCptHandshakeHandler)
 	log.Println("[GET] /api/v1/modules/wifi/stopCptHandshake")
+
+	wifiSubRouter.HandleFunc("/stopBeaconer", stopBeaconerHandler)
+	log.Println("[GET] /api/v1/modules/wifi/stopBeaconer")
 }
