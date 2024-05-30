@@ -68,6 +68,19 @@ curl -X POST \
      localhost:port/api/v1/modules/wifi/probe
 ```
 
+#### Beacon
+Beacon path will send a fake fake management beacons in order to create an access point.\
+>NOTE: specific ap mac is string in the format of a mac address e.g. FF:FF:FF:FF:FF:FF
+
+```bash
+curl -X POST \
+     -d "{\"apName\" : \"AP_NAME\",\
+          \"apMac\" : \"FF:FF:FF:FF:FF:FF\", \
+          \"ApChannel"\ : 1, \
+          \"ApEncryption"\ : ture }" \
+     localhost:port/api/v1/modules/wifi/beacon
+```
+
 #### Stop
 Stop path will kill all process of recon
 ```bash

@@ -41,8 +41,10 @@ type WiFiModule struct {
 	channel             int
 	apTTL               int
 	staTTL              int
+	apConfig            packets.Dot11ApConfig
 	hopChanges          chan bool
 	reads               *sync.WaitGroup
+	writes              *sync.WaitGroup
 	chanLock            *sync.Mutex
 
 	sync.Mutex
@@ -87,6 +89,7 @@ func NewWiFiModule(ifaceName string) (*WiFiModule, error) {
 		hopChanges:      make(chan bool),
 		chanLock:        &sync.Mutex{},
 		reads:           &sync.WaitGroup{},
+		writes:          &sync.WaitGroup{},
 	}
 
 	mod.InitState("channels")
@@ -186,7 +189,6 @@ func (mod *WiFiModule) AccessPointPacketAnalyzer() {
 			}
 
 			mod.discoverAccessPoints(radiotap, dot11, packet)
-			log.Println(mod.aps)
 		}
 	}
 

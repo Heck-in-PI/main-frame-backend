@@ -8,6 +8,7 @@
 package wifi_common
 
 import (
+	"bytes"
 	"log"
 	"strconv"
 	"time"
@@ -25,12 +26,10 @@ func (mod *WiFiModule) discoverAccessPoints(radiotap *layers.RadioTap, dot11 *la
 	if ok, ssid := packets.Dot11ParseIDSSID(packet); ok {
 		from := dot11.Address3
 
-		/*
-			// skip stuff we're sending
-			if bytes.Equal(from, mod.apConfig.BSSID) {
-				return
-			}
-		*/
+		// skip stuff we're sending
+		if bytes.Equal(from, mod.apConfig.BSSID) {
+			return
+		}
 
 		if !network.IsZeroMac(from) && !network.IsBroadcastMac(from) {
 			if int(radiotap.DBMAntennaSignal) >= mod.minRSSI {
