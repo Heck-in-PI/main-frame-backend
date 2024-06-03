@@ -69,13 +69,25 @@ curl -X POST \
 ```
 
 #### Beacon
-Beacon path will send a fake fake management beacons in order to create an access point.\
->NOTE: specific ap mac is string in the format of a mac address e.g. FF:FF:FF:FF:FF:FF
+Beacon path will send a fake fake management beacons in order to create N access point.
 
 ```bash
 curl -X POST \
      -d "{\"numberOfAP\" : 3,\
           \"apName\" : \"AP_NAME\",\
+          \"ApChannel\" : 1, \
+          \"ApEncryption\" : true }" \
+     localhost:port/api/v1/modules/wifi/beacon
+```
+
+#### RogueAP
+RogueAP path will send a fake fake management beacons in order to create rogue access point.\
+>NOTE: specific ap mac is string in the format of a mac address e.g. FF:FF:FF:FF:FF:FF
+
+```bash
+curl -X POST \
+     -d "{\"apName\" : \"AP_NAME\",\
+          \"apMac\" : \"FF:FF:FF:FF:FF:FF\", \
           \"ApChannel\" : 1, \
           \"ApEncryption\" : true }" \
      localhost:port/api/v1/modules/wifi/beacon
