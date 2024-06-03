@@ -90,7 +90,7 @@ curl -X POST \
           \"apMac\" : \"FF:FF:FF:FF:FF:FF\", \
           \"ApChannel\" : 1, \
           \"ApEncryption\" : true }" \
-     localhost:port/api/v1/modules/wifi/beacon
+     localhost:port/api/v1/modules/wifi/rogueAp
 ```
 
 #### Stop
@@ -117,4 +117,10 @@ StopBeaconer path will kill process of sending beacons.
 curl localhost:port/api/v1/modules/wifi/stopBeaconer
 ```
 
->ScanAp, ScanClient, Deauth, CaptureHandshake are either extracted from bettercap or inspired by them am not claiming the code please support the official release 
+#### StopRogueAP
+StopRogueAP path will kill process of sending beacons.
+```bash
+curl localhost:port/api/v1/modules/wifi/stopRogueAP
+```
+
+>ScanAp, ScanClient, Deauth, CaptureHandshake, Probe, Beacon, RogueAp are either extracted from bettercap or inspired by them am not claiming the code please support the official release 

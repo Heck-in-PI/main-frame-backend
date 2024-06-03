@@ -730,7 +730,36 @@ func stopCptHandshakeHandler(resp http.ResponseWriter, req *http.Request) {
 	}
 }
 
-// shut down handshake recon
+// shut down beaconer
+func stopBeaconerHandler(resp http.ResponseWriter, req *http.Request) {
+
+	defer req.Body.Close()
+
+	if req.Method == "GET" {
+
+		if wifi_common.BeaconerChanel == nil {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: "beaconer must be running",
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+			return
+		}
+
+		wifi_common.BeaconerChanel <- true
+	} else {
+
+		errorMessage := v1_common.ErrorMessage{
+			Error: "Invalid Request",
+		}
+
+		v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+	}
+}
+
+// shut down rogue ap
 func stopRogueApHandler(resp http.ResponseWriter, req *http.Request) {
 
 	defer req.Body.Close()
@@ -740,7 +769,7 @@ func stopRogueApHandler(resp http.ResponseWriter, req *http.Request) {
 		if wifi_common.RogueApChanel == nil {
 
 			errorMessage := v1_common.ErrorMessage{
-				Error: "capture handshake scanning must be running",
+				Error: "rogue ap must be running",
 			}
 
 			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
