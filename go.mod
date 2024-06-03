@@ -5,6 +5,7 @@ go 1.21.8
 require (
 	github.com/bettercap/bettercap v0.0.0-20240107114706-924ff5753dd8
 	github.com/evilsocket/islazy v1.11.0
+	github.com/go-random/mac v0.0.1
 	github.com/google/gopacket v1.1.19
 	github.com/gorilla/mux v1.8.1
 	github.com/joho/godotenv v1.5.1

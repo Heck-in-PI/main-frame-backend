@@ -74,8 +74,8 @@ Beacon path will send a fake fake management beacons in order to create an acces
 
 ```bash
 curl -X POST \
-     -d "{\"apName\" : \"AP_NAME\",\
-          \"apMac\" : \"FF:FF:FF:FF:FF:FF\", \
+     -d "{\"numberOfAP\" : 3,\
+          \"apName\" : \"AP_NAME\",\
           \"ApChannel\" : 1, \
           \"ApEncryption\" : true }" \
      localhost:port/api/v1/modules/wifi/beacon

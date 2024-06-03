@@ -32,6 +32,9 @@ func WifiRoutes(baseRoute *mux.Router) {
 	wifiSubRouter.HandleFunc("/probe", probeHandler)
 	log.Println("[POST] /api/v1/modules/wifi/probe")
 
+	wifiSubRouter.HandleFunc("/beacon", beaconHandler)
+	log.Println("[POST] /api/v1/modules/wifi/beacon")
+
 	wifiSubRouter.HandleFunc("/rogueAp", rogueApHandler)
 	log.Println("[POST] /api/v1/modules/wifi/rogueAp")
 

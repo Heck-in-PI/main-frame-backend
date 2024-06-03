@@ -1,67 +1,72 @@
 package wifi_common
 
 import (
-	"errors"
 	"log"
 	"net"
 	"time"
 
 	"github.com/bettercap/bettercap/packets"
+	"github.com/go-random/mac"
 )
 
 type Beaconer struct {
+	NumberOfAP   int
 	ApName       string
-	ApMac        string
 	ApChannel    int
 	ApEncryption bool
 }
 
-func (mod *WiFiModule) ApSettings(beaconer Beaconer) error {
+func ApGenerator(beaconer Beaconer) ([]packets.Dot11ApConfig, error) {
 
-	bssid, err := net.ParseMAC(beaconer.ApMac)
-	if err != nil {
+	var apList []packets.Dot11ApConfig
+	for i := 0; i < beaconer.NumberOfAP; i++ {
 
-		return err
+		rand := mac.NewRandomizer()
+		bssid, err := net.ParseMAC(rand.MAC())
+		if err != nil {
+
+			return nil, err
+		}
+
+		apList = append(apList, packets.Dot11ApConfig{
+			SSID:       beaconer.ApName,
+			BSSID:      bssid,
+			Channel:    beaconer.ApChannel,
+			Encryption: beaconer.ApEncryption,
+		})
 	}
 
-	mod.apConfig.SSID = beaconer.ApName
-	mod.apConfig.BSSID = bssid
-	mod.apConfig.Channel = beaconer.ApChannel
-	mod.apConfig.Encryption = beaconer.ApEncryption
-
-	return nil
+	return apList, nil
 }
 
-func (mod *WiFiModule) StartAp() error {
+func (mod *WiFiModule) Beaconer(beaconer []packets.Dot11ApConfig) error {
 
-	if mod.apRunning {
-		return errors.New(mod.apConfig.SSID + " is running")
+	err := mod.Pause()
+	if err != nil {
+		return err
 	}
 
 	go func() {
 
-		mod.apRunning = true
-		defer func() {
-			mod.apRunning = false
-		}()
+		for seqn := uint16(0); ; seqn++ {
 
-		for seqn := uint16(0); mod.Running(); seqn++ {
-			mod.writes.Add(1)
-			defer mod.writes.Done()
+			for _, beacon := range beaconer {
 
-			select {
-			case <-BeaconerChanel:
-				return
-			default:
+				select {
+				case <-BeaconerChanel:
+					return
+				default:
+				}
+
+				if err, pkt := packets.NewDot11Beacon(beacon, seqn); err != nil {
+					log.Printf("could not create beacon packet: %s\n", err)
+				} else {
+					mod.injectPacket(pkt)
+				}
+
+				seqn++
+				time.Sleep(100 * time.Millisecond)
 			}
-
-			if err, pkt := packets.NewDot11Beacon(mod.apConfig, seqn); err != nil {
-				log.Printf("could not create beacon packet: %s\n", err)
-			} else {
-				mod.injectPacket(pkt)
-			}
-
-			time.Sleep(100 * time.Millisecond)
 		}
 	}()
 

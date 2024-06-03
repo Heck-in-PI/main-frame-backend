@@ -495,6 +495,75 @@ func probeHandler(resp http.ResponseWriter, req *http.Request) {
 	}
 }
 
+// beacon handler
+func beaconHandler(resp http.ResponseWriter, req *http.Request) {
+
+	defer req.Body.Close()
+
+	if req.Method == "POST" {
+
+		var beaconer wifi_common.Beaconer
+
+		body, _ := io.ReadAll(req.Body)
+		err := json.Unmarshal(body, &beaconer)
+		if err != nil {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: err.Error(),
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+			return
+		}
+
+		if WifiModule == nil {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: "ap scanner must be running",
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+			return
+		}
+
+		wifi_common.BeaconerChanel = make(chan bool)
+		listAp, err := wifi_common.ApGenerator(beaconer)
+		if err != nil {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: err.Error(),
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
+
+			return
+		}
+
+		err = WifiModule.Beaconer(listAp)
+		if err != nil {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: err.Error(),
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
+
+			return
+		}
+
+		resp.WriteHeader(http.StatusOK)
+	} else {
+
+		errorMessage := v1_common.ErrorMessage{
+			Error: "Invalid Request",
+		}
+
+		v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+	}
+}
+
 // rogue ap handler
 func rogueApHandler(resp http.ResponseWriter, req *http.Request) {
 
