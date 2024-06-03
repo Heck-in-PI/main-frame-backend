@@ -61,6 +61,7 @@ type AccessPoint struct {
 var ScanClientChanel chan bool
 var CptHandshakeHandlerChanel chan bool
 var BeaconerChanel chan bool
+var RogueApChanel chan bool
 
 func NewWiFiModule(ifaceName string) (*WiFiModule, error) {
 
@@ -279,6 +280,17 @@ func (mod *WiFiModule) ForcedStop() error {
 		}
 		// close the pcap handle to make the main for exit
 		mod.Handle.Close()
+		mod.reads.Done()
+	})
+}
+
+func (mod *WiFiModule) Pause() error {
+	return mod.SetRunning(false, func() {
+		// signal the main for loop we want to exit
+		if !mod.pktSourceChanClosed {
+			mod.PktSourceChan <- nil
+		}
+
 		mod.reads.Done()
 	})
 }

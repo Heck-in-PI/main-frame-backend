@@ -495,17 +495,17 @@ func probeHandler(resp http.ResponseWriter, req *http.Request) {
 	}
 }
 
-// beacon handler
-func beaconHandler(resp http.ResponseWriter, req *http.Request) {
+// rogue ap handler
+func rogueApHandler(resp http.ResponseWriter, req *http.Request) {
 
 	defer req.Body.Close()
 
 	if req.Method == "POST" {
 
-		var beaconer wifi_common.Beaconer
+		var rogueAp wifi_common.RogueAp
 
 		body, _ := io.ReadAll(req.Body)
-		err := json.Unmarshal(body, &beaconer)
+		err := json.Unmarshal(body, &rogueAp)
 		if err != nil {
 
 			errorMessage := v1_common.ErrorMessage{
@@ -528,7 +528,7 @@ func beaconHandler(resp http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		err = WifiModule.ApSettings(beaconer)
+		err = WifiModule.ApSettings(rogueAp)
 		if err != nil {
 
 			errorMessage := v1_common.ErrorMessage{
@@ -540,7 +540,7 @@ func beaconHandler(resp http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		wifi_common.BeaconerChanel = make(chan bool)
+		wifi_common.RogueApChanel = make(chan bool)
 		err = WifiModule.StartAp()
 		if err != nil {
 
@@ -662,13 +662,13 @@ func stopCptHandshakeHandler(resp http.ResponseWriter, req *http.Request) {
 }
 
 // shut down handshake recon
-func stopBeaconerHandler(resp http.ResponseWriter, req *http.Request) {
+func stopRogueApHandler(resp http.ResponseWriter, req *http.Request) {
 
 	defer req.Body.Close()
 
 	if req.Method == "GET" {
 
-		if wifi_common.BeaconerChanel == nil {
+		if wifi_common.RogueApChanel == nil {
 
 			errorMessage := v1_common.ErrorMessage{
 				Error: "capture handshake scanning must be running",
@@ -679,7 +679,7 @@ func stopBeaconerHandler(resp http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		wifi_common.BeaconerChanel <- true
+		wifi_common.RogueApChanel <- true
 	} else {
 
 		errorMessage := v1_common.ErrorMessage{

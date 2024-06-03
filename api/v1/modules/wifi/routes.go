@@ -32,8 +32,8 @@ func WifiRoutes(baseRoute *mux.Router) {
 	wifiSubRouter.HandleFunc("/probe", probeHandler)
 	log.Println("[POST] /api/v1/modules/wifi/probe")
 
-	wifiSubRouter.HandleFunc("/beacon", beaconHandler)
-	log.Println("[POST] /api/v1/modules/wifi/beacon")
+	wifiSubRouter.HandleFunc("/rogueAp", rogueApHandler)
+	log.Println("[POST] /api/v1/modules/wifi/rogueAp")
 
 	wifiSubRouter.HandleFunc("/stop", stopHandler)
 	log.Println("[GET] /api/v1/modules/wifi/stop")
@@ -44,6 +44,6 @@ func WifiRoutes(baseRoute *mux.Router) {
 	wifiSubRouter.HandleFunc("/stopCptHandshake", stopCptHandshakeHandler)
 	log.Println("[GET] /api/v1/modules/wifi/stopCptHandshake")
 
-	wifiSubRouter.HandleFunc("/stopBeaconer", stopBeaconerHandler)
-	log.Println("[GET] /api/v1/modules/wifi/stopBeaconer")
+	wifiSubRouter.HandleFunc("/stopRogueAp", stopRogueApHandler)
+	log.Println("[GET] /api/v1/modules/wifi/stopRogueAp")
 }
