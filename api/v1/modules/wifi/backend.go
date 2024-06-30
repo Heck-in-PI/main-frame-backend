@@ -19,6 +19,14 @@ import (
 var WifiModule *wifi_common.WiFiModule
 
 // interfaces handler
+//	@Summary		List wireless interfaces
+//	@Description	Interfaces path will list device wirless interfaces, think of it as iwconfig.
+//	@Tags			Wifi
+//	@Produce		json
+//	@Success		200	{array}		wifi_common.WirelessInterface
+//	@Failure		400	{object}	v1_common.ErrorMessage
+//	@Failure		500	{object}	v1_common.ErrorMessage
+//	@Router			/v1/modules/wifi/interface [get]
 func interfacesHandler(resp http.ResponseWriter, req *http.Request) {
 
 	defer req.Body.Close()
@@ -76,6 +84,14 @@ func interfacesHandler(resp http.ResponseWriter, req *http.Request) {
 }
 
 // scan access point handler
+//	@Summary		List access points
+//	@Description	ScanAP path will put wireless interface in monitor mode and capture packets and filter for access point.
+//	@Tags			Wifi
+//	@Produce		json
+//	@Param			interfaceName	path	string	true	"interface name"
+//	@Success		200
+//	@Failure		400	{object}	v1_common.ErrorMessage
+//	@Router			/v1/modules/wifi/scanAp/{interfaceName} [get]
 func scanApHandler(resp http.ResponseWriter, req *http.Request) {
 
 	defer req.Body.Close()
@@ -161,6 +177,13 @@ func scanApHandler(resp http.ResponseWriter, req *http.Request) {
 }
 
 // scan client point handler
+//	@Summary		List clients of access points
+//	@Description	ScanClient path will use the wireless interface in monitor mode and capture packets and filter for the already found access point's client.
+//	@Tags			Wifi
+//	@Produce		json
+//	@Success		200
+//	@Failure		400	{object}	v1_common.ErrorMessage
+//	@Router			/v1/modules/wifi/scanClient [get]
 func scanClientHandler(resp http.ResponseWriter, req *http.Request) {
 
 	defer req.Body.Close()
@@ -211,6 +234,16 @@ func scanClientHandler(resp http.ResponseWriter, req *http.Request) {
 }
 
 // death handler
+//	@Summary		Deauth client
+//	@Description	Deauth path will deauthenticate user from an access point.
+//	@Tags			Wifi
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body	wifi_common.Deauther	true	"deauth info"
+//	@Success		200
+//	@Failure		400	{object}	v1_common.ErrorMessage
+//	@Failure		500	{object}	v1_common.ErrorMessage
+//	@Router			/v1/modules/wifi/deauth [post]
 func deauthHandler(resp http.ResponseWriter, req *http.Request) {
 
 	defer req.Body.Close()
@@ -295,6 +328,17 @@ func deauthHandler(resp http.ResponseWriter, req *http.Request) {
 }
 
 // connect to access point handler
+//	@Summary		Connect access point
+//	@Description	ConnectAp path will connect you to an access point.
+//	@Tags			Wifi
+//	@Accept			json
+//	@Produce		json
+//	@Param			request			body	wifi_common.ConnectAp	true	"ap info"
+//	@Param			interfaceName	path	string					true	"interface name"
+//	@Success		200
+//	@Failure		400	{object}	v1_common.ErrorMessage
+//	@Failure		500	{object}	v1_common.ErrorMessage
+//	@Router			/v1/modules/wifi/connectAp/{interfaceName} [post]
 func connectApHandler(resp http.ResponseWriter, req *http.Request) {
 
 	defer req.Body.Close()
@@ -365,6 +409,13 @@ func connectApHandler(resp http.ResponseWriter, req *http.Request) {
 }
 
 // capture handshake handler
+//	@Summary		Capture handshakes
+//	@Description	CaptureHandshake path will use the wireless interface in monitor mode and capture packets and filter handshakes all over the flore.
+//	@Tags			Wifi
+//	@Produce		json
+//	@Success		200
+//	@Failure		400	{object}	v1_common.ErrorMessage
+//	@Router			/v1/modules/wifi/cptHandshake [get]
 func cptHandshakeHandler(resp http.ResponseWriter, req *http.Request) {
 
 	defer req.Body.Close()
@@ -425,6 +476,16 @@ func cptHandshakeHandler(resp http.ResponseWriter, req *http.Request) {
 }
 
 // probe handler
+//	@Summary		Probe attack
+//	@Description	Probe path will send a fake client probe with the given station BSSID, searching for ESSID.
+//	@Tags			Wifi
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body	wifi_common.Prober	true	"probe info"
+//	@Success		200
+//	@Failure		400	{object}	v1_common.ErrorMessage
+//	@Failure		500	{object}	v1_common.ErrorMessage
+//	@Router			/v1/modules/wifi/probe [post]
 func probeHandler(resp http.ResponseWriter, req *http.Request) {
 
 	defer req.Body.Close()
@@ -496,6 +557,16 @@ func probeHandler(resp http.ResponseWriter, req *http.Request) {
 }
 
 // beacon handler
+//	@Summary		Beacon attack
+//	@Description	Beacon path will send a fake fake management beacons in order to create N access point.
+//	@Tags			Wifi
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body	wifi_common.Beaconer	true	"beacon info"
+//	@Success		200
+//	@Failure		400	{object}	v1_common.ErrorMessage
+//	@Failure		500	{object}	v1_common.ErrorMessage
+//	@Router			/v1/modules/wifi/beacon [post]
 func beaconHandler(resp http.ResponseWriter, req *http.Request) {
 
 	defer req.Body.Close()
@@ -565,6 +636,16 @@ func beaconHandler(resp http.ResponseWriter, req *http.Request) {
 }
 
 // rogue ap handler
+//	@Summary		rogue access point attack
+//	@Description	RogueAP path will send a fake fake management beacons in order to create rogue access point.
+//	@Tags			Wifi
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body	wifi_common.RogueAp	true	"rogue ap info"
+//	@Success		200
+//	@Failure		400	{object}	v1_common.ErrorMessage
+//	@Failure		500	{object}	v1_common.ErrorMessage
+//	@Router			/v1/modules/wifi/rogueAp [post]
 func rogueApHandler(resp http.ResponseWriter, req *http.Request) {
 
 	defer req.Body.Close()
@@ -634,6 +715,14 @@ func rogueApHandler(resp http.ResponseWriter, req *http.Request) {
 }
 
 // shut down recon
+//	@Summary		stop recon
+//	@Description	Stop path will kill all process of recon.
+//	@Tags			Wifi
+//	@Produce		json
+//	@Success		200
+//	@Failure		400	{object}	v1_common.ErrorMessage
+//	@Failure		500	{object}	v1_common.ErrorMessage
+//	@Router			/v1/modules/wifi/stop [get]
 func stopHandler(resp http.ResponseWriter, req *http.Request) {
 
 	defer req.Body.Close()
@@ -673,6 +762,13 @@ func stopHandler(resp http.ResponseWriter, req *http.Request) {
 }
 
 // shut down client recon
+//	@Summary		stop client recon
+//	@Description	StopScanClient path will kill process of searching for access point clients.
+//	@Tags			Wifi
+//	@Produce		json
+//	@Success		200
+//	@Failure		400	{object}	v1_common.ErrorMessage
+//	@Router			/v1/modules/wifi/stopScanClient [get]
 func stopScanClientHandler(resp http.ResponseWriter, req *http.Request) {
 
 	defer req.Body.Close()
@@ -702,6 +798,13 @@ func stopScanClientHandler(resp http.ResponseWriter, req *http.Request) {
 }
 
 // shut down handshake recon
+//	@Summary		stop capture handshake
+//	@Description	StopCptHandshake path will kill process of searching access points.
+//	@Tags			Wifi
+//	@Produce		json
+//	@Success		200
+//	@Failure		400	{object}	v1_common.ErrorMessage
+//	@Router			/v1/modules/wifi/stopCptHandshake [get]
 func stopCptHandshakeHandler(resp http.ResponseWriter, req *http.Request) {
 
 	defer req.Body.Close()
@@ -731,6 +834,13 @@ func stopCptHandshakeHandler(resp http.ResponseWriter, req *http.Request) {
 }
 
 // shut down beaconer
+//	@Summary		stop beacon attack
+//	@Description	StopBeaconer path will kill process of sending beacons.
+//	@Tags			Wifi
+//	@Produce		json
+//	@Success		200
+//	@Failure		400	{object}	v1_common.ErrorMessage
+//	@Router			/v1/modules/wifi/stopBeaconer [get]
 func stopBeaconerHandler(resp http.ResponseWriter, req *http.Request) {
 
 	defer req.Body.Close()
@@ -760,6 +870,13 @@ func stopBeaconerHandler(resp http.ResponseWriter, req *http.Request) {
 }
 
 // shut down rogue ap
+//	@Summary		stop rogue access point attack
+//	@Description	StopRogueAP path will kill process of sending beacons.
+//	@Tags			Wifi
+//	@Produce		json
+//	@Success		200
+//	@Failure		400	{object}	v1_common.ErrorMessage
+//	@Router			/v1/modules/wifi/stopRogueAp [get]
 func stopRogueApHandler(resp http.ResponseWriter, req *http.Request) {
 
 	defer req.Body.Close()

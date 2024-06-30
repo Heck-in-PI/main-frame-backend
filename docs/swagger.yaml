@@ -1,0 +1,413 @@
+basePath: /api
+definitions:
+  v1_common.ErrorMessage:
+    properties:
+      error:
+        type: string
+    type: object
+  wifi.InterfaceType:
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    - 12
+    type: integer
+    x-enum-varnames:
+    - InterfaceTypeUnspecified
+    - InterfaceTypeAdHoc
+    - InterfaceTypeStation
+    - InterfaceTypeAP
+    - InterfaceTypeAPVLAN
+    - InterfaceTypeWDS
+    - InterfaceTypeMonitor
+    - InterfaceTypeMeshPoint
+    - InterfaceTypeP2PClient
+    - InterfaceTypeP2PGroupOwner
+    - InterfaceTypeP2PDevice
+    - InterfaceTypeOCB
+    - InterfaceTypeNAN
+  wifi_common.Beaconer:
+    properties:
+      apChannel:
+        type: integer
+      apEncryption:
+        type: boolean
+      apName:
+        type: string
+      numberOfAP:
+        type: integer
+    type: object
+  wifi_common.ConnectAp:
+    properties:
+      apName:
+        type: string
+      apPass:
+        type: string
+    type: object
+  wifi_common.Deauther:
+    properties:
+      apMac:
+        type: string
+      clientMac:
+        type: string
+    type: object
+  wifi_common.Prober:
+    properties:
+      apMac:
+        type: string
+      apName:
+        type: string
+    type: object
+  wifi_common.RogueAp:
+    properties:
+      apChannel:
+        type: integer
+      apEncryption:
+        type: boolean
+      apMac:
+        type: string
+      apName:
+        type: string
+    type: object
+  wifi_common.WirelessInterface:
+    properties:
+      device:
+        type: integer
+      frequency:
+        type: integer
+      hardwareAddr:
+        type: string
+      index:
+        type: integer
+      name:
+        type: string
+      phy:
+        type: integer
+      type:
+        $ref: '#/definitions/wifi.InterfaceType'
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: The backend that holds the raspberry pi HACKING modules.
+  title: mf-backend
+  version: "1.0"
+paths:
+  /v1/modules/wifi/beacon:
+    post:
+      consumes:
+      - application/json
+      description: Beacon path will send a fake fake management beacons in order to
+        create N access point.
+      parameters:
+      - description: beacon info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/wifi_common.Beaconer'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1_common.ErrorMessage'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1_common.ErrorMessage'
+      summary: Beacon attack
+      tags:
+      - Wifi
+  /v1/modules/wifi/connectAp/{interfaceName}:
+    post:
+      consumes:
+      - application/json
+      description: ConnectAp path will connect you to an access point.
+      parameters:
+      - description: ap info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/wifi_common.ConnectAp'
+      - description: interface name
+        in: path
+        name: interfaceName
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1_common.ErrorMessage'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1_common.ErrorMessage'
+      summary: Connect access point
+      tags:
+      - Wifi
+  /v1/modules/wifi/cptHandshake:
+    get:
+      description: CaptureHandshake path will use the wireless interface in monitor
+        mode and capture packets and filter handshakes all over the flore.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1_common.ErrorMessage'
+      summary: Capture handshakes
+      tags:
+      - Wifi
+  /v1/modules/wifi/deauth:
+    post:
+      consumes:
+      - application/json
+      description: Deauth path will deauthenticate user from an access point.
+      parameters:
+      - description: deauth info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/wifi_common.Deauther'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1_common.ErrorMessage'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1_common.ErrorMessage'
+      summary: Deauth client
+      tags:
+      - Wifi
+  /v1/modules/wifi/interface:
+    get:
+      description: Interfaces path will list device wirless interfaces, think of it
+        as iwconfig.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/wifi_common.WirelessInterface'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1_common.ErrorMessage'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1_common.ErrorMessage'
+      summary: List wireless interfaces
+      tags:
+      - Wifi
+  /v1/modules/wifi/probe:
+    post:
+      consumes:
+      - application/json
+      description: Probe path will send a fake client probe with the given station
+        BSSID, searching for ESSID.
+      parameters:
+      - description: probe info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/wifi_common.Prober'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1_common.ErrorMessage'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1_common.ErrorMessage'
+      summary: Probe attack
+      tags:
+      - Wifi
+  /v1/modules/wifi/rogueAp:
+    post:
+      consumes:
+      - application/json
+      description: RogueAP path will send a fake fake management beacons in order
+        to create rogue access point.
+      parameters:
+      - description: rogue ap info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/wifi_common.RogueAp'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1_common.ErrorMessage'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1_common.ErrorMessage'
+      summary: rogue access point attack
+      tags:
+      - Wifi
+  /v1/modules/wifi/scanAp/{interfaceName}:
+    get:
+      description: ScanAP path will put wireless interface in monitor mode and capture
+        packets and filter for access point.
+      parameters:
+      - description: interface name
+        in: path
+        name: interfaceName
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1_common.ErrorMessage'
+      summary: List access points
+      tags:
+      - Wifi
+  /v1/modules/wifi/scanClient:
+    get:
+      description: ScanClient path will use the wireless interface in monitor mode
+        and capture packets and filter for the already found access point's client.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1_common.ErrorMessage'
+      summary: List clients of access points
+      tags:
+      - Wifi
+  /v1/modules/wifi/stop:
+    get:
+      description: Stop path will kill all process of recon.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1_common.ErrorMessage'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1_common.ErrorMessage'
+      summary: stop recon
+      tags:
+      - Wifi
+  /v1/modules/wifi/stopBeaconer:
+    get:
+      description: StopBeaconer path will kill process of sending beacons.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1_common.ErrorMessage'
+      summary: stop beacon attack
+      tags:
+      - Wifi
+  /v1/modules/wifi/stopCptHandshake:
+    get:
+      description: StopCptHandshake path will kill process of searching access points.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1_common.ErrorMessage'
+      summary: stop capture handshake
+      tags:
+      - Wifi
+  /v1/modules/wifi/stopRogueAp:
+    get:
+      description: StopRogueAP path will kill process of sending beacons.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1_common.ErrorMessage'
+      summary: stop rogue access point attack
+      tags:
+      - Wifi
+  /v1/modules/wifi/stopScanClient:
+    get:
+      description: StopScanClient path will kill process of searching for access point
+        clients.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1_common.ErrorMessage'
+      summary: stop client recon
+      tags:
+      - Wifi
+schemes:
+- http
+swagger: "2.0"
