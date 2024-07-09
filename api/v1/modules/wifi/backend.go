@@ -152,6 +152,16 @@ func scanApHandler(resp http.ResponseWriter, req *http.Request) {
 
 	if req.Method == "GET" {
 
+		if WifiModule != nil {
+			errorMessage := v1_common.ErrorMessage{
+				Error: "ap scanner already running",
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+			return
+		}
+
 		muxVars := mux.Vars(req)
 		interfaceName := muxVars["interfaceName"]
 		if interfaceName == "" {
@@ -220,6 +230,8 @@ func scanApHandler(resp http.ResponseWriter, req *http.Request) {
 				retried = true
 			}
 		}
+
+		v1_common.JsonResponceHandler(resp, http.StatusOK, nil)
 	} else {
 
 		errorMessage := v1_common.ErrorMessage{
@@ -278,6 +290,8 @@ func scanClientHandler(resp http.ResponseWriter, req *http.Request) {
 				retried = true
 			}
 		}
+
+		v1_common.JsonResponceHandler(resp, http.StatusOK, nil)
 	} else {
 
 		errorMessage := v1_common.ErrorMessage{
@@ -372,7 +386,7 @@ func deauthHandler(resp http.ResponseWriter, req *http.Request) {
 		log.Println("kicking out from:", bssid, ", client: ", client)
 		WifiModule.SendDeauthPacket(bssid, client)
 
-		resp.WriteHeader(http.StatusOK)
+		v1_common.JsonResponceHandler(resp, http.StatusOK, nil)
 	} else {
 
 		errorMessage := v1_common.ErrorMessage{
@@ -523,6 +537,8 @@ func cptHandshakeHandler(resp http.ResponseWriter, req *http.Request) {
 				retried = true
 			}
 		}
+
+		v1_common.JsonResponceHandler(resp, http.StatusOK, nil)
 	} else {
 
 		errorMessage := v1_common.ErrorMessage{
@@ -604,7 +620,7 @@ func probeHandler(resp http.ResponseWriter, req *http.Request) {
 
 		WifiModule.SendProbePacket(bssid, prober.ApName)
 
-		resp.WriteHeader(http.StatusOK)
+		v1_common.JsonResponceHandler(resp, http.StatusOK, nil)
 	} else {
 
 		errorMessage := v1_common.ErrorMessage{
@@ -684,7 +700,7 @@ func beaconHandler(resp http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		resp.WriteHeader(http.StatusOK)
+		v1_common.JsonResponceHandler(resp, http.StatusOK, nil)
 	} else {
 
 		errorMessage := v1_common.ErrorMessage{
@@ -764,7 +780,7 @@ func rogueApHandler(resp http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		resp.WriteHeader(http.StatusOK)
+		v1_common.JsonResponceHandler(resp, http.StatusOK, nil)
 	} else {
 
 		errorMessage := v1_common.ErrorMessage{
@@ -813,6 +829,8 @@ func stopHandler(resp http.ResponseWriter, req *http.Request) {
 
 			return
 		}
+
+		v1_common.JsonResponceHandler(resp, http.StatusOK, nil)
 	} else {
 
 		errorMessage := v1_common.ErrorMessage{
@@ -850,6 +868,8 @@ func stopScanClientHandler(resp http.ResponseWriter, req *http.Request) {
 		}
 
 		wifi_common.ScanClientChanel <- true
+
+		v1_common.JsonResponceHandler(resp, http.StatusOK, nil)
 	} else {
 
 		errorMessage := v1_common.ErrorMessage{
@@ -887,6 +907,8 @@ func stopCptHandshakeHandler(resp http.ResponseWriter, req *http.Request) {
 		}
 
 		wifi_common.CptHandshakeHandlerChanel <- true
+
+		v1_common.JsonResponceHandler(resp, http.StatusOK, nil)
 	} else {
 
 		errorMessage := v1_common.ErrorMessage{
@@ -924,6 +946,8 @@ func stopBeaconerHandler(resp http.ResponseWriter, req *http.Request) {
 		}
 
 		wifi_common.BeaconerChanel <- true
+
+		v1_common.JsonResponceHandler(resp, http.StatusOK, nil)
 	} else {
 
 		errorMessage := v1_common.ErrorMessage{
@@ -961,6 +985,8 @@ func stopRogueApHandler(resp http.ResponseWriter, req *http.Request) {
 		}
 
 		wifi_common.RogueApChanel <- true
+
+		v1_common.JsonResponceHandler(resp, http.StatusOK, nil)
 	} else {
 
 		errorMessage := v1_common.ErrorMessage{
