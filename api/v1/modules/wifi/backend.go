@@ -76,7 +76,7 @@ func wifiViewer(resp http.ResponseWriter, req *http.Request) {
 //	@Success		200	{array}		wifi_common.WirelessInterface
 //	@Failure		400	{object}	v1_common.ErrorMessage
 //	@Failure		500	{object}	v1_common.ErrorMessage
-//	@Router			/v1/modules/wifi/interface [get]
+//	@Router			/v1/modules/wifi/interfaces [get]
 func interfacesHandler(resp http.ResponseWriter, req *http.Request) {
 
 	defer req.Body.Close()

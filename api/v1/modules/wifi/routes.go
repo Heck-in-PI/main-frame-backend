@@ -15,7 +15,7 @@ func WifiRoutes(baseRoute *mux.Router) {
 	log.Println("[WS] /api/v1/modules/wifi/viewer")
 
 	wifiSubRouter.HandleFunc("/interfaces", interfacesHandler)
-	log.Println("[GET] /api/v1/modules/wifi/interface")
+	log.Println("[GET] /api/v1/modules/wifi/interfaces")
 
 	wifiSubRouter.HandleFunc("/scanAp/{interfaceName}", scanApHandler)
 	log.Println("[GET] /api/v1/modules/wifi/scanAp/{interfaceName}")

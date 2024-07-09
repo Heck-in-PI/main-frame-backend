@@ -174,7 +174,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/modules/wifi/interface": {
+        "/v1/modules/wifi/interfaces": {
             "get": {
                 "description": "Interfaces path will list device wirless interfaces, think of it as iwconfig.",
                 "produces": [
