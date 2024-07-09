@@ -13,12 +13,62 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 	wifi "github.com/mdlayher/wifi"
 )
 
 var WifiModule *wifi_common.WiFiModule
 
+func wifiViewer(resp http.ResponseWriter, req *http.Request) {
+
+	var upgrader = websocket.Upgrader{}
+	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
+	conn, err := upgrader.Upgrade(resp, req, nil)
+	if err != nil {
+
+		errorMessage := v1_common.ErrorMessage{
+			Error: err.Error(),
+		}
+
+		v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
+
+		return
+	}
+
+	defer conn.Close()
+	log.Println("running")
+	// Continuosly read and write message
+	for {
+
+		message, err := json.Marshal(WifiModule.GetAps())
+		if err != nil {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: err.Error(),
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
+
+			return
+		}
+
+		log.Println(string(message))
+
+		err = conn.WriteMessage(1, message)
+		if err != nil {
+			log.Println("write failed:", err)
+			break
+		}
+
+		log.Println("wiat")
+
+		time.Sleep(1 * time.Second)
+	}
+	log.Println("stopped")
+}
+
 // interfaces handler
+//
 //	@Summary		List wireless interfaces
 //	@Description	Interfaces path will list device wirless interfaces, think of it as iwconfig.
 //	@Tags			Wifi
@@ -84,6 +134,7 @@ func interfacesHandler(resp http.ResponseWriter, req *http.Request) {
 }
 
 // scan access point handler
+//
 //	@Summary		List access points
 //	@Description	ScanAP path will put wireless interface in monitor mode and capture packets and filter for access point.
 //	@Tags			Wifi
@@ -177,6 +228,7 @@ func scanApHandler(resp http.ResponseWriter, req *http.Request) {
 }
 
 // scan client point handler
+//
 //	@Summary		List clients of access points
 //	@Description	ScanClient path will use the wireless interface in monitor mode and capture packets and filter for the already found access point's client.
 //	@Tags			Wifi
@@ -234,6 +286,7 @@ func scanClientHandler(resp http.ResponseWriter, req *http.Request) {
 }
 
 // death handler
+//
 //	@Summary		Deauth client
 //	@Description	Deauth path will deauthenticate user from an access point.
 //	@Tags			Wifi
@@ -328,6 +381,7 @@ func deauthHandler(resp http.ResponseWriter, req *http.Request) {
 }
 
 // connect to access point handler
+//
 //	@Summary		Connect access point
 //	@Description	ConnectAp path will connect you to an access point.
 //	@Tags			Wifi
@@ -409,6 +463,7 @@ func connectApHandler(resp http.ResponseWriter, req *http.Request) {
 }
 
 // capture handshake handler
+//
 //	@Summary		Capture handshakes
 //	@Description	CaptureHandshake path will use the wireless interface in monitor mode and capture packets and filter handshakes all over the flore.
 //	@Tags			Wifi
@@ -476,6 +531,7 @@ func cptHandshakeHandler(resp http.ResponseWriter, req *http.Request) {
 }
 
 // probe handler
+//
 //	@Summary		Probe attack
 //	@Description	Probe path will send a fake client probe with the given station BSSID, searching for ESSID.
 //	@Tags			Wifi
@@ -557,6 +613,7 @@ func probeHandler(resp http.ResponseWriter, req *http.Request) {
 }
 
 // beacon handler
+//
 //	@Summary		Beacon attack
 //	@Description	Beacon path will send a fake fake management beacons in order to create N access point.
 //	@Tags			Wifi
@@ -636,6 +693,7 @@ func beaconHandler(resp http.ResponseWriter, req *http.Request) {
 }
 
 // rogue ap handler
+//
 //	@Summary		rogue access point attack
 //	@Description	RogueAP path will send a fake fake management beacons in order to create rogue access point.
 //	@Tags			Wifi
@@ -715,6 +773,7 @@ func rogueApHandler(resp http.ResponseWriter, req *http.Request) {
 }
 
 // shut down recon
+//
 //	@Summary		stop recon
 //	@Description	Stop path will kill all process of recon.
 //	@Tags			Wifi
@@ -762,6 +821,7 @@ func stopHandler(resp http.ResponseWriter, req *http.Request) {
 }
 
 // shut down client recon
+//
 //	@Summary		stop client recon
 //	@Description	StopScanClient path will kill process of searching for access point clients.
 //	@Tags			Wifi
@@ -798,6 +858,7 @@ func stopScanClientHandler(resp http.ResponseWriter, req *http.Request) {
 }
 
 // shut down handshake recon
+//
 //	@Summary		stop capture handshake
 //	@Description	StopCptHandshake path will kill process of searching access points.
 //	@Tags			Wifi
@@ -834,6 +895,7 @@ func stopCptHandshakeHandler(resp http.ResponseWriter, req *http.Request) {
 }
 
 // shut down beaconer
+//
 //	@Summary		stop beacon attack
 //	@Description	StopBeaconer path will kill process of sending beacons.
 //	@Tags			Wifi
@@ -870,6 +932,7 @@ func stopBeaconerHandler(resp http.ResponseWriter, req *http.Request) {
 }
 
 // shut down rogue ap
+//
 //	@Summary		stop rogue access point attack
 //	@Description	StopRogueAP path will kill process of sending beacons.
 //	@Tags			Wifi

@@ -494,3 +494,9 @@ func (mod *WiFiModule) List() (list []*AccessPoint) {
 	}
 	return
 }
+
+func (mod *WiFiModule) GetAps() map[string]*AccessPoint {
+	mod.Lock()
+	defer mod.Unlock()
+	return mod.aps
+}
