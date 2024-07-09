@@ -11,6 +11,7 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/joho/godotenv v1.5.1
 	github.com/mdlayher/wifi v0.2.0
+	github.com/rs/cors v1.11.0
 	github.com/swaggo/swag v1.16.3
 )
 

@@ -60,7 +60,10 @@ func wifiViewer(resp http.ResponseWriter, req *http.Request) {
 			break
 		}
 
-		log.Println("wiat")
+		if _, _, err := conn.NextReader(); err != nil {
+			conn.Close()
+			break
+		}
 
 		time.Sleep(1 * time.Second)
 	}

@@ -9,6 +9,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
+	"github.com/rs/cors"
 )
 
 func init() {
@@ -35,5 +36,11 @@ func server() {
 	fmt.Println("...")
 	log.Println("Server started listening on port :" + appPort)
 
-	log.Fatal(http.ListenAndServe(":"+appPort, router))
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowCredentials: true,
+	})
+
+	handler := c.Handler(router)
+	log.Fatal(http.ListenAndServe(":"+appPort, handler))
 }
