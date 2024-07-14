@@ -268,6 +268,17 @@ func scanClientHandler(resp http.ResponseWriter, req *http.Request) {
 			return
 		}
 
+		if wifi_common.ScanClientChanel != nil {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: "client scanning already running",
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+			return
+		}
+
 		retried := false
 		for retry := 0; ; retry++ {
 

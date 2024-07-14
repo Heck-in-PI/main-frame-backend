@@ -23,18 +23,19 @@ func (mod *WiFiModule) discoverClients(radiotap *layers.RadioTap, dot11 *layers.
 			freq := int(radiotap.ChannelFrequency)
 			rssi := radiotap.DBMAntennaSignal
 
-			mod.Lock()
 			ap.AddClientIfNew(bssid, freq, rssi)
-			mod.Unlock()
 		}
 	})
 }
 
 func (ap *AccessPoint) AddClientIfNew(bssid string, frequency int, rssi int8) (*network.Station, bool) {
 
+	ap.Lock()
+	defer ap.Unlock()
+
 	bssid = network.NormalizeMac(bssid)
 
-	if s, found := ap.clients[bssid]; found {
+	if s, found := ap.Clients[bssid]; found {
 		// update
 		s.Frequency = frequency
 		s.RSSI = rssi
@@ -44,7 +45,7 @@ func (ap *AccessPoint) AddClientIfNew(bssid string, frequency int, rssi int8) (*
 	}
 
 	s := network.NewStation("", bssid, frequency, rssi)
-	ap.clients[bssid] = s
+	ap.Clients[bssid] = s
 
 	return s, true
 }

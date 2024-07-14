@@ -237,7 +237,7 @@ func (mod *WiFiModule) SaveHandshakesTo(fileName string, linkType layers.LinkTyp
 	defer mod.Unlock()
 
 	for _, ap := range mod.aps {
-		for _, station := range ap.clients {
+		for _, station := range ap.Clients {
 			// if half (which includes also complete) or has pmkid
 			if station.Handshake.Any() {
 
@@ -258,6 +258,9 @@ func (mod *WiFiModule) SaveHandshakesTo(fileName string, linkType layers.LinkTyp
 }
 
 func (mod *WiFiModule) EachAccessPoint(cb func(mac string, ap *AccessPoint)) {
+
+	mod.Lock()
+	defer mod.Unlock()
 
 	for m, ap := range mod.aps {
 		cb(m, ap)

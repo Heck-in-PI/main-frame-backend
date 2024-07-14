@@ -53,8 +53,9 @@ type WiFiModule struct {
 
 type AccessPoint struct {
 	*network.Station
+	sync.RWMutex
 
-	clients         map[string]*network.Station
+	Clients         map[string]*network.Station
 	withKeyMaterial bool
 }
 
@@ -444,13 +445,13 @@ func (mod *WiFiModule) stationPruner() {
 			sinceLastSeen := time.Since(ap.LastSeen)
 			if sinceLastSeen > maxApTTL {
 				log.Printf("station %s not seen in %s, removing.\n", ap.BSSID(), sinceLastSeen)
-				mod.Session.WiFi.Remove(ap.BSSID())
+				mod.Remove(ap.BSSID())
 				continue
 			}
 			// loop every AP client
 			mod.Lock()
-			clients := make([]*network.Station, 0, len(ap.clients))
-			for _, c := range ap.clients {
+			clients := make([]*network.Station, 0, len(ap.Clients))
+			for _, c := range ap.Clients {
 				clients = append(clients, c)
 			}
 			mod.Unlock()
@@ -493,6 +494,13 @@ func (mod *WiFiModule) List() (list []*AccessPoint) {
 		list = append(list, ap)
 	}
 	return
+}
+
+func (mod *WiFiModule) Remove(mac string) {
+	mod.Lock()
+	defer mod.Unlock()
+
+	delete(mod.aps, mac)
 }
 
 func (mod *WiFiModule) GetAps() map[string]*AccessPoint {

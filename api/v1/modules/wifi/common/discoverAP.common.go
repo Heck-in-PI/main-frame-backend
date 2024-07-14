@@ -83,7 +83,7 @@ func (mod *WiFiModule) AddIfNew(ssid, mac string, frequency int, rssi int8) (*Ac
 	networkAp := network.NewAccessPoint(ssid, mac, frequency, rssi, unsortedKV)
 	newAp := AccessPoint{
 		Station: networkAp.Station,
-		clients: make(map[string]*network.Station),
+		Clients: make(map[string]*network.Station),
 	}
 
 	mod.aps[mac] = &newAp
@@ -93,7 +93,7 @@ func (mod *WiFiModule) AddIfNew(ssid, mac string, frequency int, rssi int8) (*Ac
 
 func (ap *AccessPoint) EachClient(cb func(mac string, station *network.Station)) {
 
-	for m, station := range ap.clients {
+	for m, station := range ap.Clients {
 		cb(m, station)
 	}
 }
@@ -110,7 +110,7 @@ func isBogusMacESSID(essid string) bool {
 func (ap *AccessPoint) Get(bssid string) (*network.Station, bool) {
 
 	bssid = network.NormalizeMac(bssid)
-	if s, found := ap.clients[bssid]; found {
+	if s, found := ap.Clients[bssid]; found {
 		return s, true
 	}
 	return nil, false
@@ -119,7 +119,7 @@ func (ap *AccessPoint) Get(bssid string) (*network.Station, bool) {
 func (ap *AccessPoint) RemoveClient(mac string) {
 
 	bssid := network.NormalizeMac(mac)
-	delete(ap.clients, bssid)
+	delete(ap.Clients, bssid)
 }
 
 func (mod *WiFiModule) HasKeyMaterial(ap *AccessPoint) bool {
