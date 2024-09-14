@@ -516,6 +516,17 @@ func cptHandshakeHandler(resp http.ResponseWriter, req *http.Request) {
 			return
 		}
 
+		if wifi_common.CptHandshakeHandlerChanel != nil {
+
+			errorMessage := v1_common.ErrorMessage{
+				Error: "capture handshake already running",
+			}
+
+			v1_common.JsonResponceHandler(resp, http.StatusBadRequest, errorMessage)
+
+			return
+		}
+
 		retried := false
 		for retry := 0; ; retry++ {
 
