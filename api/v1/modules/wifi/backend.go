@@ -52,8 +52,6 @@ func wifiViewer(resp http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		log.Println(string(message))
-
 		err = conn.WriteMessage(1, message)
 		if err != nil {
 			log.Println("write failed:", err)
@@ -202,7 +200,7 @@ func scanApHandler(resp http.ResponseWriter, req *http.Request) {
 		retried := false
 		for retry := 0; ; retry++ {
 
-			if WifiModule.PktSourceChan != nil && len(WifiModule.PktSourceChan) != 0 {
+			if WifiModule.PktSourceChan != nil { //&& len(WifiModule.PktSourceChan) != 0 {
 				go WifiModule.AccessPointPacketAnalyzer()
 				break
 			} else if retried {
@@ -627,19 +625,6 @@ func probeHandler(resp http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		// set wifi to monitor mode
-		err = WifiModule.Configure()
-		if err != nil {
-
-			errorMessage := v1_common.ErrorMessage{
-				Error: err.Error(),
-			}
-
-			v1_common.JsonResponceHandler(resp, http.StatusInternalServerError, errorMessage)
-
-			return
-		}
-
 		WifiModule.SendProbePacket(bssid, prober.ApName)
 
 		v1_common.JsonResponceHandler(resp, http.StatusOK, nil)
@@ -851,6 +836,8 @@ func stopHandler(resp http.ResponseWriter, req *http.Request) {
 
 			return
 		}
+		log.Println("stopped called")
+		WifiModule = nil
 
 		v1_common.JsonResponceHandler(resp, http.StatusOK, nil)
 	} else {
